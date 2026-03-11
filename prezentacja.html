@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prezentacja — CloudDrive Redesign</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-dark: #0a0a1a;
+      --bg-card: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --text: #f1f5f9;
+      --text-dim: #64748b;
+      --accent: #6366f1;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .slides-container { position: relative; width: 100%; height: 100vh; }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 80px;
+      opacity: 0;
+      transform: translateX(60px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      pointer-events: none;
+    }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+    .slide.prev { opacity: 0; transform: translateX(-60px); }
+
+    .bg-orb { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; }
+    .bg-orb-1 { width: 500px; height: 500px; top: -150px; right: -100px; background: rgba(99,102,241,0.12); animation: f1 8s ease-in-out infinite; }
+    .bg-orb-2 { width: 400px; height: 400px; bottom: -100px; left: -100px; background: rgba(168,85,247,0.10); animation: f2 10s ease-in-out infinite; }
+    @keyframes f1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-30px, 20px); } }
+    @keyframes f2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(20px, -30px); } }
+
+    /* Nav */
+    .nav-bar {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 10px 20px; z-index: 100;
+    }
+    .nav-btn {
+      width: 44px; height: 44px; border-radius: 14px; border: none;
+      background: rgba(255,255,255,0.06); color: #94a3b8; font-size: 18px;
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+    }
+    .nav-btn:hover { background: rgba(99,102,241,0.2); color: white; }
+    .nav-btn:active { transform: scale(0.95); }
+    .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .nav-dots { display: flex; gap: 6px; padding: 0 8px; }
+    .nav-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,0.15); border: none; cursor: pointer; transition: all 0.3s;
+    }
+    .nav-dot.active { background: var(--accent); width: 24px; border-radius: 4px; }
+    .slide-counter { color: var(--text-dim); font-size: 13px; font-weight: 600; min-width: 50px; text-align: center; }
+
+    /* Typography */
+    .title-xl { font-size: clamp(42px, 5vw, 72px); font-weight: 900; line-height: 1.1; letter-spacing: -0.03em; text-align: center; }
+    .title-lg { font-size: clamp(30px, 3.5vw, 50px); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; text-align: center; }
+    .subtitle { font-size: clamp(16px, 1.5vw, 22px); font-weight: 400; color: var(--text-dim); line-height: 1.6; text-align: center; max-width: 700px; }
+    .gradient-text {
+      background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px;
+      border-radius: 50px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); margin-bottom: 20px;
+    }
+
+    /* Mockup frame */
+    .mockup-frame {
+      width: 100%; max-width: 900px; border-radius: 20px; overflow: hidden;
+      border: 1px solid var(--border); background: #0f172a;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+    }
+    .mockup-titlebar {
+      display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+      background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border);
+    }
+    .mockup-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .mockup-dot.red { background: #ef4444; }
+    .mockup-dot.yellow { background: #f59e0b; }
+    .mockup-dot.green { background: #22c55e; }
+    .mockup-url {
+      flex: 1; text-align: center; font-size: 12px; color: var(--text-dim);
+      background: rgba(255,255,255,0.04); border-radius: 8px; padding: 5px 16px; margin: 0 40px;
+    }
+    .mockup-body { padding: 24px; }
+
+    /* Section highlight */
+    .section-highlight {
+      display: flex; gap: 24px; width: 100%; max-width: 1000px; align-items: stretch;
+    }
+    .section-visual {
+      flex: 1; border-radius: 20px; overflow: hidden; border: 1px solid var(--border);
+      background: #0f172a; padding: 20px; min-height: 280px; display: flex; flex-direction: column; justify-content: center;
+    }
+    .section-info {
+      flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px;
+    }
+    .section-info h3 { font-size: 28px; font-weight: 800; }
+    .section-info p { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
+    .section-info .detail-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .section-info .detail-list li {
+      display: flex; align-items: center; gap: 10px; font-size: 14px; color: #cbd5e1;
+    }
+    .check { color: #4ade80; font-size: 16px; }
+
+    /* Mini mockup elements */
+    .mini-navbar {
+      display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
+      border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .mini-logo { display: flex; align-items: center; gap: 8px; }
+    .mini-logo-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center;
+    }
+    .mini-logo-text { font-size: 13px; font-weight: 700; }
+    .mini-logo-text span { background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .mini-actions { display: flex; gap: 6px; }
+    .mini-btn {
+      width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 12px;
+    }
+    .mini-search {
+      display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+      border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); font-size: 11px; color: var(--text-dim);
+    }
+
+    .mini-sidebar-card {
+      padding: 12px; border-radius: 14px; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;
+    }
+    .mini-sidebar-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 8px; }
+    .mini-progress { width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.06); margin-top: 4px; }
+    .mini-progress-fill { height: 100%; border-radius: 2px; }
+
+    .mini-file-row {
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+      border-radius: 10px; transition: background 0.2s; font-size: 12px;
+    }
+    .mini-file-row:hover { background: rgba(255,255,255,0.03); }
+    .mini-file-icon {
+      width: 24px; height: 24px; border-radius: 6px; display: flex;
+      align-items: center; justify-content: center; font-size: 12px;
+    }
+
+    .mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .mini-grid-card {
+      padding: 12px 8px; border-radius: 12px; text-align: center;
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.2s;
+    }
+    .mini-grid-card:hover { transform: translateY(-2px); }
+    .mini-grid-icon {
+      width: 32px; height: 32px; border-radius: 10px; margin: 0 auto 6px;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .mini-grid-name { font-size: 10px; font-weight: 600; color: #cbd5e1; }
+
+    .mini-toast {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+      border-radius: 12px; font-size: 12px; font-weight: 600; color: white;
+      background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 8px 24px rgba(16,185,129,0.3);
+    }
+    .mini-toast .toast-check {
+      width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center; font-size: 10px;
+    }
+
+    .mini-modal {
+      padding: 20px; border-radius: 20px; background: rgba(30,41,59,0.95);
+      border: 1px solid rgba(255,255,255,0.08); text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4); max-width: 280px; margin: 0 auto;
+    }
+    .mini-modal-icon {
+      width: 48px; height: 48px; border-radius: 14px; margin: 0 auto 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 24px;
+    }
+    .mini-modal h4 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .mini-modal p { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; }
+    .mini-modal-btns { display: flex; gap: 8px; }
+    .mini-modal-btn {
+      flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 600;
+      border: none; cursor: pointer; transition: transform 0.1s;
+    }
+    .mini-modal-btn:active { transform: scale(0.97); }
+    .mini-modal-btn.cancel { background: rgba(255,255,255,0.06); color: #cbd5e1; }
+    .mini-modal-btn.primary { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; }
+    .mini-modal-btn.danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+
+    .mini-footer {
+      display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
+      border-radius: 12px; background: rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.05);
+      font-size: 10px; color: var(--text-dim);
+    }
+
+    /* Final slide */
+    .logo-hero {
+      width: 90px; height: 90px; border-radius: 28px;
+      background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 28px;
+      box-shadow: 0 20px 60px rgba(99,102,241,0.3);
+    }
+    .logo-hero svg { width: 46px; height: 46px; color: white; }
+    .final-cta {
+      padding: 18px 36px; border-radius: 18px; font-size: 17px; font-weight: 700;
+      border: none; cursor: pointer; background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: white; box-shadow: 0 10px 40px rgba(99,102,241,0.3);
+      transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
+    }
+    .final-cta:hover { transform: translateY(-2px); box-shadow: 0 15px 50px rgba(99,102,241,0.4); }
+
+    .keyboard-hint {
+      position: fixed; top: 20px; right: 24px; font-size: 11px; color: rgba(255,255,255,0.25); z-index: 100;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .keyboard-hint kbd {
+      padding: 2px 8px; background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-family: inherit;
+    }
+
+    /* Slide number watermark */
+    .slide-number {
+      position: absolute; top: 24px; left: 32px; font-size: 12px; font-weight: 700;
+      color: rgba(255,255,255,0.08); letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<div class="keyboard-hint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> nawigacja</div>
+
+<div class="slides-container" id="slidesContainer">
+
+  <!-- ===== SLIDE 1: TYTUL ===== -->
+  <div class="slide active" data-index="0">
+    <div class="logo-hero">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+      </svg>
+    </div>
+    <h1 class="title-xl">
+      Cloud<span class="gradient-text">Drive</span>
+    </h1>
+    <p class="subtitle" style="margin-top: 20px;">
+      Redesign interfejsu aplikacji<br>do zarządzania plikami w chmurze
+    </p>
+  </div>
+
+  <!-- ===== SLIDE 2: NOWY NAVBAR ===== -->
+  <div class="slide" data-index="1">
+    <div class="slide-number">01</div>
+    <span class="tag">Górny pasek</span>
+    <h2 class="title-lg" style="margin-bottom: 40px;">Nowy navbar</h2>
+
+    <div class="section-highlight">
+      <div class="section-visual">
+        <div class="mini-navbar">
+          <div class="mini-logo">
+            <div class="mini-logo-icon">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+              </svg>
+            </div>
+            <div class="mini-logo-text">Cloud<span>Drive</span></div>
+          </div>
+          <div class="mini-search">&#128269; Szukaj plików...</div>
+          <div class="mini-actions">
+            <div class="mini-btn" title="Widok listy">&#9776;</div>
+            <div class="mini-btn" title="Widok siatki">&#9638;</div>
+            <div class="mini-btn" style="color:#fbbf24;">&#9728;</div>
+            <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#ec4899,#f97316);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white;">ZK</div>
+          </div>
+        </div>
+        <p style="text-align:center; margin-top:16px; font-size:10px; color:var(--text-dim);">Przykład sticky — zostaje na górze przy scrollowaniu</p>
+      </div>
+      <div class="section-info">
+        <h3>Górny pasek nawigacji</h3>
+        <p>Navbar został całkowicie przebudowany z nowoczesnymi elementami.</p>
+        <ul class="detail-list">
+          <li><span class="check">&#10003;</span> Logo z gradientową nazwą "CloudDrive"</li>
+          <li><span class="check">&#10003;</span> Wyszukiwarka plików</li>
+          <li><span class="check">&#10003;</span> Przełącznik widoku lista / siatka</li>
+          <li><span class="check">&#10003;</span> Tryb ciemny / jasny</li>
+          <li><span class="check">&#10003;</span> Avatar użytkownika ze statusem online</li>
+          <li><span class="check">&#10003;</span> Przylepiony do góry z efektem rozmycia tła</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 3: SIDEBAR ===== -->
+  <div class="slide" data-index="2">
+    <div class="slide-number">02</div>
+    <span class="tag">Panel boczny</span>
+    <h2 class="title-lg" style="margin-bottom: 40px;">Rozbudowany sidebar</h2>
+
+    <div class="section-highlight">
+      <div class="section-visual" style="max-width: 240px;">
+        <div class="mini-sidebar-card">
+          <div class="mini-sidebar-title">Przestrzeń dyskowa</div>
+          <div style="text-align:center; margin: 8px 0;">
+            <div style="font-size:28px; font-weight:900;">3%</div>
+            <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase;">wykorzystane</div>
+          </div>
+          <div class="mini-progress"><div class="mini-progress-fill" style="width:3%; background: linear-gradient(90deg, #6366f1, #a855f7);"></div></div>
+        </div>
+        <div class="mini-sidebar-card">
+          <div class="mini-sidebar-title">Typy plików</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <div style="width:22px;height:22px;border-radius:6px;background:rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#f59e0b;">.jpg</div>
+            <div style="flex:1;">
+              <div class="mini-progress"><div class="mini-progress-fill" style="width:60%; background:#f59e0b;"></div></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <div style="width:22px;height:22px;border-radius:6px;background:rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#ef4444;">.pdf</div>
+            <div style="flex:1;">
+              <div class="mini-progress"><div class="mini-progress-fill" style="width:45%; background:#ef4444;"></div></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:22px;height:22px;border-radius:6px;background:rgba(99,102,241,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#6366f1;">.zip</div>
+            <div style="flex:1;">
+              <div class="mini-progress"><div class="mini-progress-fill" style="width:35%; background:#6366f1;"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mini-sidebar-card">
+          <div class="mini-sidebar-title">Ostatnio modyfikowane</div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:10px;color:#cbd5e1;">&#128196; report.pdf</div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:10px;color:#cbd5e1;">&#128248; photo.jpg</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="text-align:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);">
+            <div style="font-size:18px;font-weight:900;">15</div>
+            <div style="font-size:8px;color:var(--text-dim);text-transform:uppercase;">Pliki</div>
+          </div>
+          <div style="text-align:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);">
+            <div style="font-size:18px;font-weight:900;">3</div>
+            <div style="font-size:8px;color:var(--text-dim);text-transform:uppercase;">Katalogi</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-info">
+        <h3>Panel boczny ze statystykami</h3>
+        <p>Sidebar został rozbudowany o nowe sekcje informacyjne.</p>
+        <ul class="detail-list">
+          <li><span class="check">&#10003;</span> Wykres kołowy użycia dysku + pasek postępu</li>
+          <li><span class="check">&#10003;</span> <strong>Nowe:</strong> Typy plików z kolorowymi paskami</li>
+          <li><span class="check">&#10003;</span> <strong>Nowe:</strong> Ostatnio modyfikowane pliki</li>
+          <li><span class="check">&#10003;</span> <strong>Nowe:</strong> Kafelki ze statystykami plików/katalogów</li>
+          <li><span class="check">&#10003;</span> Zaokrąglone karty z efektem glass morphism</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 4: WIDOK LISTY ===== -->
+  <div class="slide" data-index="3">
+    <div class="slide-number">03</div>
+    <span class="tag">Lista plików</span>
+    <h2 class="title-lg" style="margin-bottom: 40px;">Odświeżony widok listy</h2>
+
+    <div class="section-highlight">
+      <div class="section-visual" style="flex: 1.3;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;">Moje pliki</div>
+            <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
+              <div style="padding:3px 8px;border-radius:6px;background:rgba(99,102,241,0.15);font-size:10px;font-weight:600;color:#818cf8;display:flex;align-items:center;gap:4px;">
+                <span style="font-size:8px;">&#127968;</span> Root
+              </div>
+              <span style="color:rgba(255,255,255,0.15);font-size:10px;">&#10095;</span>
+              <div style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600;color:var(--text-dim);">documents</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <div style="padding:5px 10px;border-radius:8px;background:rgba(255,255,255,0.06);font-size:10px;font-weight:600;color:#cbd5e1;display:flex;align-items:center;gap:4px;">+ Nowy folder</div>
+            <div style="padding:5px 10px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#a855f7);font-size:10px;font-weight:600;color:white;display:flex;align-items:center;gap:4px;">&#8593; Prześlij</div>
+          </div>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;">
+          <div class="mini-file-row" style="background:rgba(99,102,241,0.06);">
+            <div class="mini-file-icon" style="background:rgba(245,158,11,0.15);">&#128193;</div>
+            <div style="flex:1;font-weight:600;color:#fbbf24;">projects</div>
+            <div style="font-size:10px;color:var(--text-dim);">—</div>
+            <div style="display:flex;gap:2px;">
+              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#9998;</div>
+              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#128465;</div>
+            </div>
+          </div>
+          <div class="mini-file-row">
+            <div class="mini-file-icon" style="background:rgba(99,102,241,0.15);">&#128213;</div>
+            <div style="flex:1;font-weight:600;">report.pdf</div>
+            <div style="font-size:10px;color:var(--text-dim);">2.3 MB</div>
+            <div style="display:flex;gap:2px;">
+              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#8595;</div>
+              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#9998;</div>
+              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#128465;</div>
+            </div>
+          </div>
+          <div class="mini-file-row">
+            <div class="mini-file-icon" style="background:rgba(99,102,241,0.15);">&#128248;</div>
+            <div style="flex:1;font-weight:600;">photo.jpg</div>
+            <div style="font-size:10px;color:var(--text-dim);">3.0 MB</div>
+            <div style="display:flex;gap:2px;">
+              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#8595;</div>
+              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#9998;</div>
+              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#128465;</div>
+            </div>
+          </div>
+        </div>
+        <div class="mini-footer" style="margin-top:8px;">
+          <span>3 elementów</span>
+          <span>36.5 MB / 1 GB</span>
+        </div>
+      </div>
+      <div class="section-info">
+        <h3>Widok listy</h3>
+        <p>Tabela plików z ulepszonymi efektami i przyciskami SVG.</p>
+        <ul class="detail-list">
+          <li><span class="check">&#10003;</span> Breadcrumb nawigacja z ikonami SVG</li>
+          <li><span class="check">&#10003;</span> Wiersze z efektem przesunięcia przy hover</li>
+          <li><span class="check">&#10003;</span> Kaskadowe animacje ładowania wierszy</li>
+          <li><span class="check">&#10003;</span> SVG ikony zamiast emoji w akcjach</li>
+          <li><span class="check">&#10003;</span> Podświetlenie wybranego wiersza</li>
+          <li><span class="check">&#10003;</span> Stopka z podsumowaniem</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 5: WIDOK SIATKI ===== -->
+  <div class="slide" data-index="4">
+    <div class="slide-number">04</div>
+    <span class="tag" style="background:rgba(34,197,94,0.15); color:#4ade80; border-color:rgba(34,197,94,0.2);">Nowe</span>
+    <h2 class="title-lg" style="margin-bottom: 40px;">Widok siatki</h2>
+
+    <div class="section-highlight">
+      <div class="section-visual" style="flex: 1.3;">
+        <div class="mini-grid">
+          <div class="mini-grid-card">
+            <div class="mini-grid-icon" style="background:rgba(245,158,11,0.15);">&#128193;</div>
+            <div class="mini-grid-name" style="color:#fbbf24;">projects</div>
+            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">Katalog</div>
+          </div>
+          <div class="mini-grid-card">
+            <div class="mini-grid-icon" style="background:rgba(245,158,11,0.15);">&#128193;</div>
+            <div class="mini-grid-name" style="color:#fbbf24;">documents</div>
+            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">Katalog</div>
+          </div>
+          <div class="mini-grid-card">
+            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128213;</div>
+            <div class="mini-grid-name">report.pdf</div>
+            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">2.3 MB</div>
+          </div>
+          <div class="mini-grid-card">
+            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128248;</div>
+            <div class="mini-grid-name">photo.jpg</div>
+            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">3.0 MB</div>
+          </div>
+          <div class="mini-grid-card">
+            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128230;</div>
+            <div class="mini-grid-name">backup.zip</div>
+            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">15.0 MB</div>
+          </div>
+          <div class="mini-grid-card">
+            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128221;</div>
+            <div class="mini-grid-name">readme.txt</div>
+            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">1 KB</div>
+          </div>
+          <div class="mini-grid-card">
+            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128202;</div>
+            <div class="mini-grid-name">present.pptx</div>
+            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">5.0 MB</div>
+          </div>
+          <div class="mini-grid-card">
+            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128451;</div>
+            <div class="mini-grid-name">database.sql</div>
+            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">800 KB</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-info">
+        <h3>Całkowicie nowy widok</h3>
+        <p>Można teraz przełączać między listą a siatką za pomocą przycisków w navbarze.</p>
+        <ul class="detail-list">
+          <li><span class="check">&#10003;</span> Karty z ikoną, nazwą i rozmiarem</li>
+          <li><span class="check">&#10003;</span> Efekt unoszenia przy najechaniu</li>
+          <li><span class="check">&#10003;</span> Przyciski akcji pojawiają się przy hover</li>
+          <li><span class="check">&#10003;</span> Podwójne kliknięcie otwiera folder</li>
+          <li><span class="check">&#10003;</span> Responsywna siatka 2-4 kolumny</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 6: MODALE I TOAST ===== -->
+  <div class="slide" data-index="5">
+    <div class="slide-number">05</div>
+    <span class="tag">Interakcje</span>
+    <h2 class="title-lg" style="margin-bottom: 40px;">Modale i powiadomienia</h2>
+
+    <div class="section-highlight">
+      <div class="section-visual" style="gap: 16px; align-items: center;">
+        <div class="mini-toast" style="margin-bottom: 8px;">
+          <div class="toast-check">&#10003;</div>
+          Przesłano 2 plik(ów)
+        </div>
+        <div style="display:flex; gap: 12px; width: 100%; justify-content: center;">
+          <div class="mini-modal" style="flex:1;">
+            <div class="mini-modal-icon" style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(249,115,22,0.2));">&#128193;</div>
+            <h4>Nowy katalog</h4>
+            <div style="padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:10px;color:var(--text-dim);text-align:left;margin-bottom:12px;">Nazwa katalogu</div>
+            <div class="mini-modal-btns">
+              <div class="mini-modal-btn cancel">Anuluj</div>
+              <div class="mini-modal-btn primary">Utwórz</div>
+            </div>
+          </div>
+          <div class="mini-modal" style="flex:1;">
+            <div class="mini-modal-icon" style="background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.2));">&#128465;</div>
+            <h4>Usuń plik?</h4>
+            <p>Czy na pewno chcesz usunąć "photo.jpg"?</p>
+            <div class="mini-modal-btns">
+              <div class="mini-modal-btn cancel">Anuluj</div>
+              <div class="mini-modal-btn danger">Usuń</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section-info">
+        <h3>Ulepszone okna dialogowe</h3>
+        <p>Modale i powiadomienia dostały nowy, bardziej dopracowany wygląd.</p>
+        <ul class="detail-list">
+          <li><span class="check">&#10003;</span> Modale z animacją skalowania</li>
+          <li><span class="check">&#10003;</span> Gradientowe ikony w nagłówkach</li>
+          <li><span class="check">&#10003;</span> Rozmyte tło za modalem</li>
+          <li><span class="check">&#10003;</span> Toast wjeżdża z prawej strony</li>
+          <li><span class="check">&#10003;</span> Efekt wciśnięcia na przyciskach</li>
+          <li><span class="check">&#10003;</span> Upload z drag & drop i animacją</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 7: TLO I DETALE ===== -->
+  <div class="slide" data-index="6">
+    <div class="slide-number">06</div>
+    <span class="tag" style="background:rgba(168,85,247,0.15); color:#c084fc; border-color:rgba(168,85,247,0.2);">Efekty</span>
+    <h2 class="title-lg" style="margin-bottom: 40px;">Tło, animacje i detale</h2>
+
+    <div class="section-highlight">
+      <div class="section-visual" style="position:relative; background: linear-gradient(135deg, #0f0a2a, #1a0e3e, #0f172a);">
+        <!-- Floating orbs -->
+        <div style="position:absolute;top:20px;right:30px;width:80px;height:80px;border-radius:50%;background:rgba(99,102,241,0.15);filter:blur(20px);animation:f1 4s ease-in-out infinite;"></div>
+        <div style="position:absolute;bottom:30px;left:20px;width:60px;height:60px;border-radius:50%;background:rgba(168,85,247,0.12);filter:blur(15px);animation:f2 5s ease-in-out infinite;"></div>
+        <div style="position:absolute;top:50%;right:40%;width:50px;height:50px;border-radius:50%;background:rgba(236,72,153,0.08);filter:blur(12px);"></div>
+
+        <div style="position:relative;z-index:1;text-align:center;">
+          <p style="font-size:12px;font-weight:600;color:#818cf8;margin-bottom:8px;">Pływające gradientowe kule</p>
+          <p style="font-size:10px;color:var(--text-dim);line-height:1.6;">
+            Trzy animowane elementy w tle tworzące<br>subtelny efekt głębokości
+          </p>
+        </div>
+      </div>
+      <div class="section-info">
+        <h3>Wizualne detale</h3>
+        <p>Każdy element interfejsu dostał dopracowane efekty wizualne.</p>
+        <ul class="detail-list">
+          <li><span class="check">&#10003;</span> Animowane gradientowe kule w tle</li>
+          <li><span class="check">&#10003;</span> Efekt glass morphism na kartach</li>
+          <li><span class="check">&#10003;</span> Płynne przejścia kolorów (dark/light)</li>
+          <li><span class="check">&#10003;</span> Kaskadowe ładowanie wierszy tabeli</li>
+          <li><span class="check">&#10003;</span> Minimalistyczny scrollbar</li>
+          <li><span class="check">&#10003;</span> Stopka z logo i prawami autorskimi</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 8: PODSUMOWANIE ===== -->
+  <div class="slide" data-index="7">
+    <div class="logo-hero">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+      </svg>
+    </div>
+    <h2 class="title-xl" style="margin-bottom: 16px;">
+      <span class="gradient-text">Gotowe!</span>
+    </h2>
+    <p class="subtitle" style="margin-bottom: 50px;">
+      Aplikacja CloudDrive jest teraz w pełni dopracowana wizualnie
+    </p>
+
+    <a href="http://localhost:5174" target="_blank" class="final-cta">
+      Zobacz efekt w przeglądarce
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+      </svg>
+    </a>
+
+    <p style="margin-top: 40px; font-size: 13px; color: var(--text-dim);">
+      Dziękuję za uwagę &#128640;
+    </p>
+  </div>
+
+</div>
+
+<!-- Nav -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevSlide()">&#8592;</button>
+  <div class="nav-dots" id="navDots"></div>
+  <button class="nav-btn" id="nextBtn" onclick="nextSlide()">&#8594;</button>
+  <div class="slide-counter" id="slideCounter">1 / 8</div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentSlide = 0;
+
+  const dotsContainer = document.getElementById('navDots');
+  for (let i = 0; i < totalSlides; i++) {
+    const dot = document.createElement('button');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.onclick = () => goToSlide(i);
+    dotsContainer.appendChild(dot);
+  }
+
+  function updateSlides() {
+    slides.forEach((slide, i) => {
+      slide.classList.remove('active', 'prev');
+      if (i === currentSlide) slide.classList.add('active');
+      else if (i < currentSlide) slide.classList.add('prev');
+    });
+    dotsContainer.querySelectorAll('.nav-dot').forEach((dot, i) => dot.classList.toggle('active', i === currentSlide));
+    document.getElementById('slideCounter').textContent = `${currentSlide + 1} / ${totalSlides}`;
+    document.getElementById('prevBtn').disabled = currentSlide === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+  }
+
+  function nextSlide() { if (currentSlide < totalSlides - 1) { currentSlide++; updateSlides(); } }
+  function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlides(); } }
+  function goToSlide(i) { currentSlide = i; updateSlides(); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
+  document.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].screenX;
+    if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+  });
+</script>
+
+</body>
+</html>
