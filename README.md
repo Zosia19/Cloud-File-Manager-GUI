@@ -1,104 +1,84 @@
-# RabbitMQ Producer - Projekt
+# CloudDrive — Cloud File Manager GUI
 
-Prosty producer w Pythonie wysyłający wiadomości do RabbitMQ.
+Aplikacja webowa do zarządzania plikami w chmurze z pełnym interfejsem graficznym. Frontend zbudowany w React + Vite, komunikuje się z backendem REST API ([CloudFileOperationsBackend](./CloudFileOperationsBackend)).
 
-## Wymagania
+## Funkcje
 
-- Docker i Docker Compose
-- Python 3.7+
-- pip
+- Przesyłanie plików (kliknięcie lub drag & drop)
+- Pobieranie plików i katalogów (katalogi jako ZIP)
+- Tworzenie, usuwanie i zmiana nazwy plików oraz katalogów
+- Nawigacja po strukturze katalogów z breadcrumb
+- Wyszukiwanie plików
+- Sortowanie po nazwie, rozmiarze
+- Widok listy i siatki
+- Wykres zajętości przestrzeni dyskowej
+- Tryb ciemny i jasny
+- Autoryzacja (JWT)
 
-## Szybki start
+## Stos technologiczny
 
-### 1. Uruchom RabbitMQ
+**Frontend**
+- React 18
+- Vite
+- Tailwind CSS
+- Recharts (wykres kołowy)
 
-```bash
-docker-compose up -d
-```
+**Backend** — osobne repozytorium [`CloudFileOperationsBackend`](./CloudFileOperationsBackend)
+- Go (REST API)
+- PostgreSQL
+- S3-compatible object storage
+- nginx (reverse proxy)
+- Docker + Docker Compose
 
-Sprawdź, czy działa:
-```bash
-docker ps
-```
+## Uruchomienie
 
-Powinien być widoczny kontener `rabbitmq-broker`.
-
-### 2. Zainstaluj zależności Python
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Uruchom producenta
-
-```bash
-python producer.py
-```
-
-## Co się dzieje?
-
-1. Producer łączy się z RabbitMQ (localhost:5672)
-2. Tworzy exchange o nazwie `logs` typu `fanout`
-3. Wysyła 4 przykładowe wiadomości JSON
-4. Każda wiadomość zawiera: level, msg, timestamp
-
-## Weryfikacja
-
-### Panel zarządzania RabbitMQ
-
-Otwórz w przeglądarce: http://localhost:15672
-
-- Login: `admin`
-- Hasło: `admin123`
-
-W zakładce **Exchanges** znajdziesz `logs`.
-
-### Konfiguracja (opcjonalna)
-
-Możesz zmienić ustawienia przez zmienne środowiskowe:
+### 1. Backend
 
 ```bash
-# Windows (PowerShell)
-$env:AMQP_URL="amqp://admin:admin123@localhost:5672/"
-$env:EXCHANGE="logs"
-$env:EXCHANGE_TYPE="fanout"
-python producer.py
+cd CloudFileOperationsBackend
 
-# Linux/Mac
-export AMQP_URL="amqp://admin:admin123@localhost:5672/"
-export EXCHANGE="logs"
-export EXCHANGE_TYPE="fanout"
-python producer.py
+# Tryb developerski
+docker compose -f compose.local.yaml up -d --build
+
+# Tryb produkcyjny
+docker compose up -d --build
 ```
+
+API dostępne pod: `http://localhost:8080`
+
+### 2. Frontend
+
+```bash
+npm install
+npm run dev
+```
+
+Aplikacja dostępna pod: `http://localhost:5173`
 
 ## Struktura projektu
 
 ```
 .
-├── docker-compose.yml    # Konfiguracja RabbitMQ
-├── producer.py           # Producer w Pythonie
-├── requirements.txt      # Zależności Python
-└── README.md            # Ta dokumentacja
+├── src/
+│   ├── App.jsx              # Główny komponent aplikacji
+│   ├── api.js               # Komunikacja z REST API
+│   └── components/
+│       ├── LoginPage.jsx    # Strona logowania
+│       ├── navbar.jsx       # Pasek nawigacji
+│       ├── Sidebar.jsx      # Panel boczny
+│       └── ...
+├── CloudFileOperationsBackend/   # Backend (submoduł)
+│   ├── services/
+│   │   ├── app/             # Go REST API
+│   │   ├── database/        # PostgreSQL
+│   │   ├── file-storage/    # S3 object store
+│   │   └── reverse-proxy/   # nginx
+│   ├── compose.yaml
+│   └── compose.local.yaml
+├── index.html
+└── vite.config.js
 ```
 
-## Co dalej?
+## Dokumentacja API
 
-- Dodaj consumer w Pythonie (odbieranie wiadomości)
-- Dodaj producenta w Go lub Node.js
-- Wypróbuj inne typy exchange (direct, topic, headers)
-- Dodaj obsługę retry i ACK/NACK
-
-## Troubleshooting
-
-**Problem:** `pika.exceptions.AMQPConnectionError`
-- Sprawdź czy RabbitMQ działa: `docker ps`
-- Sprawdź czy port 5672 jest wolny
-- Restart: `docker-compose restart`
-
-**Problem:** Nie widzę wiadomości w UI
-- Wiadomości typu fanout wymagają podłączonych kolejek
-- Dodaj consumer aby zobaczyć wiadomości w kolejce
-
-## Kontakt
-
-Projekt w ramach kursu RabbitMQ Message Broker System.
+Endpointy REST API udokumentowane na [apidog](https://mx3hqpvt7q.apidog.io/).
