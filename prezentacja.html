@@ -3,685 +3,892 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Prezentacja — CloudDrive Redesign</title>
+  <title>CloudDrive — Prezentacja</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg-dark: #0a0a1a;
-      --bg-card: rgba(255,255,255,0.04);
-      --border: rgba(255,255,255,0.08);
-      --text: #f1f5f9;
-      --text-dim: #64748b;
-      --accent: #6366f1;
+      --bg:      #07071a;
+      --card:    rgba(255,255,255,0.04);
+      --border:  rgba(255,255,255,0.08);
+      --text:    #f1f5f9;
+      --muted:   #64748b;
+      --accent:  #6366f1;
     }
 
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg-dark);
+      background: var(--bg);
       color: var(--text);
       overflow: hidden;
-      height: 100vh;
-      width: 100vw;
+      height: 100vh; width: 100vw;
     }
 
-    .slides-container { position: relative; width: 100%; height: 100vh; }
+    /* ─── orbs ─────────────────────────── */
+    .orb { position: fixed; border-radius: 50%; filter: blur(110px); pointer-events: none; z-index: 0; }
+    .orb1 { width: 560px; height: 560px; top: -180px; right: -120px; background: rgba(99,102,241,.13); animation: f1 9s ease-in-out infinite; }
+    .orb2 { width: 420px; height: 420px; bottom: -120px; left: -100px; background: rgba(168,85,247,.10); animation: f2 11s ease-in-out infinite; }
+    .orb3 { width: 300px; height: 300px; top: 40%; right: 30%; background: rgba(236,72,153,.06); animation: f1 14s ease-in-out infinite reverse; }
+    @keyframes f1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-28px,22px)} }
+    @keyframes f2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(22px,-28px)} }
 
+    /* ─── slides ────────────────────────── */
+    .wrap {
+      position: fixed;
+      top: 50%; left: 50%;
+      width: 1280px; height: 720px;
+      transform-origin: center center;
+    }
     .slide {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 60px 80px;
-      opacity: 0;
-      transform: translateX(60px);
-      transition: opacity 0.5s ease, transform 0.5s ease;
-      pointer-events: none;
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 52px 80px;
+      opacity: 0; transform: translateX(56px);
+      transition: opacity .45s ease, transform .45s ease;
+      pointer-events: none; z-index: 1;
     }
     .slide.active { opacity: 1; transform: translateX(0); pointer-events: all; }
-    .slide.prev { opacity: 0; transform: translateX(-60px); }
+    .slide.prev   { opacity: 0; transform: translateX(-56px); }
 
-    .bg-orb { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; }
-    .bg-orb-1 { width: 500px; height: 500px; top: -150px; right: -100px; background: rgba(99,102,241,0.12); animation: f1 8s ease-in-out infinite; }
-    .bg-orb-2 { width: 400px; height: 400px; bottom: -100px; left: -100px; background: rgba(168,85,247,0.10); animation: f2 10s ease-in-out infinite; }
-    @keyframes f1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-30px, 20px); } }
-    @keyframes f2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(20px, -30px); } }
-
-    /* Nav */
-    .nav-bar {
-      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    /* ─── nav ───────────────────────────── */
+    .nav {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
       display: flex; align-items: center; gap: 12px;
-      background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 10px 20px; z-index: 100;
+      background: rgba(255,255,255,0.06); backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 20px; padding: 9px 18px; z-index: 100;
     }
-    .nav-btn {
-      width: 44px; height: 44px; border-radius: 14px; border: none;
-      background: rgba(255,255,255,0.06); color: #94a3b8; font-size: 18px;
-      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+    .nbtn {
+      width: 42px; height: 42px; border-radius: 13px; border: none;
+      background: rgba(255,255,255,0.06); color: #94a3b8; font-size: 17px;
+      cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center;
     }
-    .nav-btn:hover { background: rgba(99,102,241,0.2); color: white; }
-    .nav-btn:active { transform: scale(0.95); }
-    .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-    .nav-dots { display: flex; gap: 6px; padding: 0 8px; }
-    .nav-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: rgba(255,255,255,0.15); border: none; cursor: pointer; transition: all 0.3s;
+    .nbtn:hover { background: rgba(99,102,241,.22); color: white; }
+    .nbtn:disabled { opacity: .28; cursor: not-allowed; }
+    .dots { display: flex; gap: 6px; padding: 0 8px; }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,.14); border: none; cursor: pointer; transition: all .3s;
     }
-    .nav-dot.active { background: var(--accent); width: 24px; border-radius: 4px; }
-    .slide-counter { color: var(--text-dim); font-size: 13px; font-weight: 600; min-width: 50px; text-align: center; }
+    .dot.active { background: var(--accent); width: 22px; border-radius: 4px; }
+    .ctr { color: var(--muted); font-size: 12px; font-weight: 600; min-width: 46px; text-align: center; }
 
-    /* Typography */
-    .title-xl { font-size: clamp(42px, 5vw, 72px); font-weight: 900; line-height: 1.1; letter-spacing: -0.03em; text-align: center; }
-    .title-lg { font-size: clamp(30px, 3.5vw, 50px); font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; text-align: center; }
-    .subtitle { font-size: clamp(16px, 1.5vw, 22px); font-weight: 400; color: var(--text-dim); line-height: 1.6; text-align: center; max-width: 700px; }
-    .gradient-text {
-      background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+    /* ─── type ──────────────────────────── */
+    .txl { font-size: clamp(40px,5vw,68px); font-weight: 900; line-height: 1.1; letter-spacing: -.03em; text-align: center; }
+    .tlg { font-size: clamp(28px,3.4vw,48px); font-weight: 800; line-height: 1.15; letter-spacing: -.02em; text-align: center; }
+    .sub { font-size: clamp(15px,1.4vw,20px); color: var(--muted); line-height: 1.65; text-align: center; max-width: 660px; }
+    .grad {
+      background: linear-gradient(135deg,#6366f1,#a855f7,#ec4899);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-
     .tag {
-      display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px;
-      border-radius: 50px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
-      background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); margin-bottom: 20px;
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px;
+      border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+      background: rgba(99,102,241,.15); color: #818cf8; border: 1px solid rgba(99,102,241,.22); margin-bottom: 18px;
     }
+    .tag.green { background: rgba(34,197,94,.13); color: #4ade80; border-color: rgba(34,197,94,.2); }
+    .tag.pink  { background: rgba(236,72,153,.13); color: #f472b6; border-color: rgba(236,72,153,.2); }
+    .tag.amber { background: rgba(245,158,11,.13); color: #fbbf24; border-color: rgba(245,158,11,.2); }
 
-    /* Mockup frame */
-    .mockup-frame {
-      width: 100%; max-width: 900px; border-radius: 20px; overflow: hidden;
-      border: 1px solid var(--border); background: #0f172a;
-      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
-    }
-    .mockup-titlebar {
-      display: flex; align-items: center; gap: 8px; padding: 12px 16px;
-      background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border);
-    }
-    .mockup-dot { width: 12px; height: 12px; border-radius: 50%; }
-    .mockup-dot.red { background: #ef4444; }
-    .mockup-dot.yellow { background: #f59e0b; }
-    .mockup-dot.green { background: #22c55e; }
-    .mockup-url {
-      flex: 1; text-align: center; font-size: 12px; color: var(--text-dim);
-      background: rgba(255,255,255,0.04); border-radius: 8px; padding: 5px 16px; margin: 0 40px;
-    }
-    .mockup-body { padding: 24px; }
-
-    /* Section highlight */
-    .section-highlight {
-      display: flex; gap: 24px; width: 100%; max-width: 1000px; align-items: stretch;
-    }
-    .section-visual {
-      flex: 1; border-radius: 20px; overflow: hidden; border: 1px solid var(--border);
-      background: #0f172a; padding: 20px; min-height: 280px; display: flex; flex-direction: column; justify-content: center;
-    }
-    .section-info {
-      flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px;
-    }
-    .section-info h3 { font-size: 28px; font-weight: 800; }
-    .section-info p { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
-    .section-info .detail-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .section-info .detail-list li {
-      display: flex; align-items: center; gap: 10px; font-size: 14px; color: #cbd5e1;
-    }
-    .check { color: #4ade80; font-size: 16px; }
-
-    /* Mini mockup elements */
-    .mini-navbar {
-      display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
-      border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
-    }
-    .mini-logo { display: flex; align-items: center; gap: 8px; }
-    .mini-logo-icon {
-      width: 28px; height: 28px; border-radius: 8px;
-      background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center;
-    }
-    .mini-logo-text { font-size: 13px; font-weight: 700; }
-    .mini-logo-text span { background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .mini-actions { display: flex; gap: 6px; }
-    .mini-btn {
-      width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 12px;
-    }
-    .mini-search {
-      display: flex; align-items: center; gap: 6px; padding: 6px 12px;
-      border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); font-size: 11px; color: var(--text-dim);
-    }
-
-    .mini-sidebar-card {
-      padding: 12px; border-radius: 14px; background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px;
-    }
-    .mini-sidebar-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 8px; }
-    .mini-progress { width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.06); margin-top: 4px; }
-    .mini-progress-fill { height: 100%; border-radius: 2px; }
-
-    .mini-file-row {
-      display: flex; align-items: center; gap: 8px; padding: 8px 10px;
-      border-radius: 10px; transition: background 0.2s; font-size: 12px;
-    }
-    .mini-file-row:hover { background: rgba(255,255,255,0.03); }
-    .mini-file-icon {
-      width: 24px; height: 24px; border-radius: 6px; display: flex;
-      align-items: center; justify-content: center; font-size: 12px;
-    }
-
-    .mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .mini-grid-card {
-      padding: 12px 8px; border-radius: 12px; text-align: center;
-      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.2s;
-    }
-    .mini-grid-card:hover { transform: translateY(-2px); }
-    .mini-grid-icon {
-      width: 32px; height: 32px; border-radius: 10px; margin: 0 auto 6px;
-      display: flex; align-items: center; justify-content: center; font-size: 16px;
-    }
-    .mini-grid-name { font-size: 10px; font-weight: 600; color: #cbd5e1; }
-
-    .mini-toast {
-      display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
-      border-radius: 12px; font-size: 12px; font-weight: 600; color: white;
-      background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 8px 24px rgba(16,185,129,0.3);
-    }
-    .mini-toast .toast-check {
-      width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.2);
-      display: flex; align-items: center; justify-content: center; font-size: 10px;
-    }
-
-    .mini-modal {
-      padding: 20px; border-radius: 20px; background: rgba(30,41,59,0.95);
-      border: 1px solid rgba(255,255,255,0.08); text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4); max-width: 280px; margin: 0 auto;
-    }
-    .mini-modal-icon {
-      width: 48px; height: 48px; border-radius: 14px; margin: 0 auto 12px;
-      display: flex; align-items: center; justify-content: center; font-size: 24px;
-    }
-    .mini-modal h4 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-    .mini-modal p { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; }
-    .mini-modal-btns { display: flex; gap: 8px; }
-    .mini-modal-btn {
-      flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 600;
-      border: none; cursor: pointer; transition: transform 0.1s;
-    }
-    .mini-modal-btn:active { transform: scale(0.97); }
-    .mini-modal-btn.cancel { background: rgba(255,255,255,0.06); color: #cbd5e1; }
-    .mini-modal-btn.primary { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; }
-    .mini-modal-btn.danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
-
-    .mini-footer {
-      display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
-      border-radius: 12px; background: rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.05);
-      font-size: 10px; color: var(--text-dim);
-    }
-
-    /* Final slide */
+    /* ─── logo hero ─────────────────────── */
     .logo-hero {
-      width: 90px; height: 90px; border-radius: 28px;
-      background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
-      display: flex; align-items: center; justify-content: center; margin-bottom: 28px;
-      box-shadow: 0 20px 60px rgba(99,102,241,0.3);
+      width: 86px; height: 86px; border-radius: 26px;
+      background: linear-gradient(135deg,#6366f1,#a855f7,#ec4899);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 26px;
+      box-shadow: 0 20px 56px rgba(99,102,241,.3);
     }
-    .logo-hero svg { width: 46px; height: 46px; color: white; }
-    .final-cta {
-      padding: 18px 36px; border-radius: 18px; font-size: 17px; font-weight: 700;
-      border: none; cursor: pointer; background: linear-gradient(135deg, #6366f1, #a855f7);
-      color: white; box-shadow: 0 10px 40px rgba(99,102,241,0.3);
-      transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
-    }
-    .final-cta:hover { transform: translateY(-2px); box-shadow: 0 15px 50px rgba(99,102,241,0.4); }
+    .logo-hero svg { width: 44px; height: 44px; color: white; }
 
-    .keyboard-hint {
-      position: fixed; top: 20px; right: 24px; font-size: 11px; color: rgba(255,255,255,0.25); z-index: 100;
+    /* ─── two-col layout ────────────────── */
+    .cols { display: flex; gap: 28px; width: 100%; max-width: 1020px; align-items: stretch; }
+    .panel {
+      flex: 1; border-radius: 22px; border: 1px solid var(--border);
+      background: #0f172a; padding: 24px; display: flex; flex-direction: column; justify-content: center;
+    }
+    .info { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+    .info h3 { font-size: 26px; font-weight: 800; }
+    .info p  { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .chk  { color: #4ade80; font-size: 15px; }
+    .ul   { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .ul li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #cbd5e1; }
+
+    /* ─── feature grid ───────────────────── */
+    .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; width: 100%; max-width: 920px; }
+    .feat-card {
+      border-radius: 20px; padding: 22px 20px; border: 1px solid var(--border);
+      background: rgba(255,255,255,.03); display: flex; flex-direction: column; gap: 10px;
+      transition: transform .2s;
+    }
+    .feat-card:hover { transform: translateY(-3px); }
+    .feat-icon {
+      width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .feat-card h4 { font-size: 15px; font-weight: 700; }
+    .feat-card p  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ─── audience cards ─────────────────── */
+    .aud-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; width: 100%; max-width: 860px; }
+    .aud-card {
+      border-radius: 22px; padding: 30px 24px; border: 1px solid var(--border);
+      background: rgba(255,255,255,.03); text-align: center; transition: transform .2s;
+    }
+    .aud-card:hover { transform: translateY(-4px); }
+    .aud-emoji { font-size: 44px; margin-bottom: 14px; }
+    .aud-card h4 { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+    .aud-card p  { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+    /* ─── steps ─────────────────────────── */
+    .steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; width: 100%; max-width: 1000px; }
+    .step  {
+      border-radius: 20px; padding: 24px 18px; border: 1px solid var(--border);
+      background: rgba(255,255,255,.03); text-align: center; position: relative;
+    }
+    .step-num {
+      width: 38px; height: 38px; border-radius: 50%; margin: 0 auto 14px;
+      background: linear-gradient(135deg,#6366f1,#a855f7);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 900; color: white;
+    }
+    .step h4 { font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+    .step p  { font-size: 12px; color: var(--muted); line-height: 1.65; }
+
+    /* ─── tech stack ────────────────────── */
+    .tech-cols { display: flex; gap: 24px; width: 100%; max-width: 1040px; }
+    .tech-box {
+      flex: 1; border-radius: 22px; padding: 28px 26px; border: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .tech-box h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 20px; }
+    .tech-row {
+      display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px;
+      margin-bottom: 8px; transition: background .2s;
+    }
+    .tech-row:hover { background: rgba(255,255,255,.04); }
+    .tech-badge {
+      padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .06em; min-width: 52px; text-align: center;
+    }
+    .tech-row span { font-size: 13px; color: #cbd5e1; }
+    .tech-row small { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+    /* ─── team ──────────────────────────── */
+    .team-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; width: 100%; max-width: 900px; }
+    .team-card {
+      border-radius: 22px; padding: 28px 22px; border: 1px solid var(--border);
+      background: rgba(255,255,255,.03); text-align: center;
+    }
+    .team-avatar {
+      width: 64px; height: 64px; border-radius: 20px; margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 900; color: white;
+    }
+    .team-card h4 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+    .team-card .role { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+    .team-card p  { font-size: 13px; color: var(--muted); line-height: 1.65; }
+    .ill-badge {
+      display: inline-flex; align-items: center; gap: 5px; margin-top: 10px;
+      padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      background: rgba(249,115,22,.15); color: #fb923c; border: 1px solid rgba(249,115,22,.25);
+    }
+
+    /* ─── final cta ──────────────────────── */
+    .cta {
+      padding: 16px 34px; border-radius: 18px; font-size: 16px; font-weight: 700;
+      border: none; cursor: pointer;
+      background: linear-gradient(135deg,#6366f1,#a855f7);
+      color: white; box-shadow: 0 10px 36px rgba(99,102,241,.3);
+      transition: all .2s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+    .cta:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(99,102,241,.42); }
+
+    /* ─── slide num ──────────────────────── */
+    .snum {
+      position: absolute; top: 22px; left: 30px;
+      font-size: 11px; font-weight: 700; color: rgba(255,255,255,.07); letter-spacing: .1em;
+    }
+    .hint {
+      position: fixed; top: 18px; right: 22px;
+      font-size: 11px; color: rgba(255,255,255,.22); z-index: 100;
       display: flex; align-items: center; gap: 6px;
     }
-    .keyboard-hint kbd {
-      padding: 2px 8px; background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-family: inherit;
-    }
+    .hint kbd { padding: 2px 8px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; font-family: inherit; }
 
-    /* Slide number watermark */
-    .slide-number {
-      position: absolute; top: 24px; left: 32px; font-size: 12px; font-weight: 700;
-      color: rgba(255,255,255,0.08); letter-spacing: 0.1em;
+    /* ─── divider ────────────────────────── */
+    .divider {
+      display: flex; align-items: center; gap: 16px; width: 100%; max-width: 560px; margin: 16px 0;
     }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.07); }
+    .divider span { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; }
+
+    /* ─── problem boxes ──────────────────── */
+    .prob { display: flex; gap: 28px; width: 100%; max-width: 900px; }
+    .prob-box {
+      flex: 1; border-radius: 22px; padding: 28px 24px; border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .prob-box h4 { font-size: 16px; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .prob-box li { font-size: 13px; color: var(--muted); line-height: 1.8; padding-left: 14px; position: relative; }
+    .prob-box li::before { content: '•'; position: absolute; left: 0; }
+    .prob-box.bad  { border-color: rgba(239,68,68,.2);  background: rgba(239,68,68,.04); }
+    .prob-box.good { border-color: rgba(99,102,241,.2); background: rgba(99,102,241,.04); }
   </style>
 </head>
 <body>
 
-<div class="bg-orb bg-orb-1"></div>
-<div class="bg-orb bg-orb-2"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
 
-<div class="keyboard-hint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> nawigacja</div>
 
-<div class="slides-container" id="slidesContainer">
+<div class="wrap" id="wrap">
 
-  <!-- ===== SLIDE 1: TYTUL ===== -->
+  <!-- ══ 1. TYTUŁ ══════════════════════════════════════════════════════════ -->
   <div class="slide active" data-index="0">
     <div class="logo-hero">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
       </svg>
     </div>
-    <h1 class="title-xl">
-      Cloud<span class="gradient-text">Drive</span>
-    </h1>
-    <p class="subtitle" style="margin-top: 20px;">
-      Redesign interfejsu aplikacji<br>do zarządzania plikami w chmurze
+    <h1 class="txl">Cloud<span class="grad">Drive</span></h1>
+    <p class="sub" style="margin-top:18px;">
+      Aplikacja webowa do zarządzania plikami w chmurze<br>
+      — prosta, szybka i dostępna wszędzie
+    </p>
+    <div class="divider" style="margin-top:36px;"><span>Projekt zespołowy · 2026</span></div>
+  </div>
+
+  <!-- ══ 1.5. NASZ ZESPÓŁ — wstęp ════════════════════════════════════════ -->
+  <div class="slide" data-index="team-intro">
+    <span class="tag green">Nasz zespół</span>
+    <h2 class="tlg" style="margin-bottom:12px;">Klasa 3B — Programiści</h2>
+    <p class="sub" style="margin-bottom:40px;">Projekt CloudDrive — zarządzanie plikami w chmurze</p>
+
+    <div style="display:flex;gap:24px;width:100%;max-width:780px;justify-content:center;">
+      <div style="flex:1;border-radius:24px;padding:32px 22px;border:2px solid rgba(99,102,241,.4);background:rgba(99,102,241,.07);text-align:center;position:relative;">
+        <div style="position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#6366f1,#a855f7);color:white;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;padding:4px 14px;border-radius:20px;white-space:nowrap;">prezentuje</div>
+        <div style="width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:white;margin:0 auto 16px;">M</div>
+        <h3 style="font-size:22px;font-weight:800;margin-bottom:6px;">Mikołaj</h3>
+        <p style="font-size:13px;color:var(--muted);">Frontend</p>
+      </div>
+      <div style="flex:1;border-radius:24px;padding:32px 22px;border:1px solid var(--border);background:rgba(255,255,255,.03);text-align:center;">
+        <div style="width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:white;margin:0 auto 16px;">Z</div>
+        <h3 style="font-size:22px;font-weight:800;margin-bottom:6px;">Zosia</h3>
+        <p style="font-size:13px;color:var(--muted);">Frontend</p>
+      </div>
+      <div style="flex:1;border-radius:24px;padding:32px 22px;border:1px solid var(--border);background:rgba(255,255,255,.03);text-align:center;">
+        <div style="width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,#8b5cf6,#6366f1);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:white;margin:0 auto 16px;">D</div>
+        <h3 style="font-size:22px;font-weight:800;margin-bottom:6px;">Dawid</h3>
+        <p style="font-size:13px;color:var(--muted);">Frontend</p>
+      </div>
+    </div>
+
+    <div class="divider" style="margin-top:36px;"><span>Klasa 3B · Programiści · 2026</span></div>
+  </div>
+
+  <!-- ══ 2. PROBLEM ════════════════════════════════════════════════════════ -->
+  <div class="slide" data-index="1">
+    <div class="snum">01</div>
+    <span class="tag">Problem</span>
+    <h2 class="tlg" style="margin-bottom:36px;">Zarządzanie plikami w chmurze bywa uciążliwe</h2>
+
+    <div class="prob">
+      <div class="prob-box bad">
+        <h4>❌ Bez CloudDrive</h4>
+        <ul style="list-style:none;">
+          <li>Zagmatwane interfejsy, trudne w obsłudze</li>
+          <li>Nie wiadomo gdzie kliknąć, żeby wgrać plik</li>
+          <li>Szukanie jednego pliku wśród setek — koszmar</li>
+          <li>Pobieranie folderu? Trzeba ściągać plik po pliku</li>
+          <li>Brak podglądu ile miejsca jest zajęte</li>
+        </ul>
+      </div>
+      <div class="prob-box good">
+        <h4>✅ Z CloudDrive</h4>
+        <ul style="list-style:none;">
+          <li>Przejrzysty interfejs — wszystko w jednym miejscu</li>
+          <li>Upload jednym kliknięciem lub drag &amp; drop</li>
+          <li>Wyszukiwarka — znajdziesz plik w sekundy</li>
+          <li>Cały folder pobierany automatycznie jako ZIP</li>
+          <li>Wykres zajętości dysku zawsze pod ręką</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 3. CO TO JEST? ════════════════════════════════════════════════════ -->
+  <div class="slide" data-index="2">
+    <div class="snum">02</div>
+    <span class="tag green">Czym jest?</span>
+    <h2 class="tlg" style="margin-bottom:36px;">CloudDrive — przeglądarkowy menedżer plików</h2>
+
+    <div class="cols">
+      <div class="panel" style="flex:1.1; gap:14px; display:flex; flex-direction:column; justify-content:center;">
+        <!-- mini mockup -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;font-size:11px;">☁️</div>
+            <span style="font-size:13px;font-weight:700;">Cloud<span style="background:linear-gradient(135deg,#6366f1,#a855f7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Drive</span></span>
+          </div>
+          <div style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.05);padding:4px 10px;border-radius:8px;">🔍 Szukaj plików...</div>
+          <div style="display:flex;gap:5px;">
+            <div style="width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:10px;">≡</div>
+            <div style="width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:10px;">⊞</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);font-size:10px;color:var(--muted);">📁 projects</div>
+          <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);font-size:10px;color:var(--muted);">📕 report.pdf · 2.3 MB</div>
+          <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);font-size:10px;color:var(--muted);">🖼️ photo.jpg · 3.0 MB</div>
+          <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);font-size:10px;color:var(--muted);">📦 backup.zip · 15 MB</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);padding-top:6px;">
+          <span>4 elementy</span><span>21.3 MB / 1 GB</span>
+        </div>
+      </div>
+      <div class="info">
+        <h3>Aplikacja uruchamiana w przeglądarce</h3>
+        <p>CloudDrive to w pełni działająca aplikacja do przechowywania i zarządzania plikami — bez instalowania czegokolwiek.</p>
+        <ul class="ul">
+          <li><span class="chk">✓</span> Działa na każdym urządzeniu z przeglądarką</li>
+          <li><span class="chk">✓</span> Twoje pliki bezpiecznie w chmurze</li>
+          <li><span class="chk">✓</span> Dostęp po zalogowaniu z dowolnego miejsca</li>
+          <li><span class="chk">✓</span> Nowoczesny, responsywny interfejs</li>
+          <li><span class="chk">✓</span> Tryb ciemny i jasny</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 4. DLA KOGO? ══════════════════════════════════════════════════════ -->
+  <div class="slide" data-index="3">
+    <div class="snum">03</div>
+    <span class="tag pink">Dla kogo?</span>
+    <h2 class="tlg" style="margin-bottom:36px;">CloudDrive jest dla każdego, kto ma pliki w sieci</h2>
+
+    <div class="aud-grid">
+      <div class="aud-card">
+        <div class="aud-emoji">🎓</div>
+        <h4>Student</h4>
+        <p>Notatki, projekty, prezentacje — wszystko wgrywasz raz i masz dostęp z dowolnego miejsca: laptopa w domu, telefonu w komunikacji, komputera w bibliotece. Koniec z pendrivami.</p>
+      </div>
+      <div class="aud-card">
+        <div class="aud-emoji">💼</div>
+        <h4>Pracownik</h4>
+        <p>Raporty, dokumenty firmowe, pliki projektów — wgrywasz szybko, wyszukujesz błyskawicznie. Nie musisz pamiętać, w którym folderze co leży. Bezpieczne przechowywanie bez kompromisów.</p>
+      </div>
+      <div class="aud-card">
+        <div class="aud-emoji">🎨</div>
+        <h4>Hobbysta / twórca</h4>
+        <p>Zdjęcia, muzyka, projekty graficzne — przechowuj i organizuj swoje prace twórcze we własnej strukturze folderów. Wszystko posortowane tak, jak lubisz, dostępne natychmiast.</p>
+      </div>
+    </div>
+
+    <p class="sub" style="margin-top:28px; font-size:14px;">
+      Słowem — dla każdego, kto ceni porządek i chce mieć swoje pliki zawsze pod ręką.
     </p>
   </div>
 
-  <!-- ===== SLIDE 2: NOWY NAVBAR ===== -->
-  <div class="slide" data-index="1">
-    <div class="slide-number">01</div>
-    <span class="tag">Górny pasek</span>
-    <h2 class="title-lg" style="margin-bottom: 40px;">Nowy navbar</h2>
-
-    <div class="section-highlight">
-      <div class="section-visual">
-        <div class="mini-navbar">
-          <div class="mini-logo">
-            <div class="mini-logo-icon">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-              </svg>
-            </div>
-            <div class="mini-logo-text">Cloud<span>Drive</span></div>
-          </div>
-          <div class="mini-search">&#128269; Szukaj plików...</div>
-          <div class="mini-actions">
-            <div class="mini-btn" title="Widok listy">&#9776;</div>
-            <div class="mini-btn" title="Widok siatki">&#9638;</div>
-            <div class="mini-btn" style="color:#fbbf24;">&#9728;</div>
-            <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#ec4899,#f97316);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white;">ZK</div>
-          </div>
-        </div>
-        <p style="text-align:center; margin-top:16px; font-size:10px; color:var(--text-dim);">Przykład sticky — zostaje na górze przy scrollowaniu</p>
-      </div>
-      <div class="section-info">
-        <h3>Górny pasek nawigacji</h3>
-        <p>Navbar został całkowicie przebudowany z nowoczesnymi elementami.</p>
-        <ul class="detail-list">
-          <li><span class="check">&#10003;</span> Logo z gradientową nazwą "CloudDrive"</li>
-          <li><span class="check">&#10003;</span> Wyszukiwarka plików</li>
-          <li><span class="check">&#10003;</span> Przełącznik widoku lista / siatka</li>
-          <li><span class="check">&#10003;</span> Tryb ciemny / jasny</li>
-          <li><span class="check">&#10003;</span> Avatar użytkownika ze statusem online</li>
-          <li><span class="check">&#10003;</span> Przylepiony do góry z efektem rozmycia tła</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== SLIDE 3: SIDEBAR ===== -->
-  <div class="slide" data-index="2">
-    <div class="slide-number">02</div>
-    <span class="tag">Panel boczny</span>
-    <h2 class="title-lg" style="margin-bottom: 40px;">Rozbudowany sidebar</h2>
-
-    <div class="section-highlight">
-      <div class="section-visual" style="max-width: 240px;">
-        <div class="mini-sidebar-card">
-          <div class="mini-sidebar-title">Przestrzeń dyskowa</div>
-          <div style="text-align:center; margin: 8px 0;">
-            <div style="font-size:28px; font-weight:900;">3%</div>
-            <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase;">wykorzystane</div>
-          </div>
-          <div class="mini-progress"><div class="mini-progress-fill" style="width:3%; background: linear-gradient(90deg, #6366f1, #a855f7);"></div></div>
-        </div>
-        <div class="mini-sidebar-card">
-          <div class="mini-sidebar-title">Typy plików</div>
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <div style="width:22px;height:22px;border-radius:6px;background:rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#f59e0b;">.jpg</div>
-            <div style="flex:1;">
-              <div class="mini-progress"><div class="mini-progress-fill" style="width:60%; background:#f59e0b;"></div></div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <div style="width:22px;height:22px;border-radius:6px;background:rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#ef4444;">.pdf</div>
-            <div style="flex:1;">
-              <div class="mini-progress"><div class="mini-progress-fill" style="width:45%; background:#ef4444;"></div></div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <div style="width:22px;height:22px;border-radius:6px;background:rgba(99,102,241,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#6366f1;">.zip</div>
-            <div style="flex:1;">
-              <div class="mini-progress"><div class="mini-progress-fill" style="width:35%; background:#6366f1;"></div></div>
-            </div>
-          </div>
-        </div>
-        <div class="mini-sidebar-card">
-          <div class="mini-sidebar-title">Ostatnio modyfikowane</div>
-          <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:10px;color:#cbd5e1;">&#128196; report.pdf</div>
-          <div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:10px;color:#cbd5e1;">&#128248; photo.jpg</div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <div style="text-align:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);">
-            <div style="font-size:18px;font-weight:900;">15</div>
-            <div style="font-size:8px;color:var(--text-dim);text-transform:uppercase;">Pliki</div>
-          </div>
-          <div style="text-align:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);">
-            <div style="font-size:18px;font-weight:900;">3</div>
-            <div style="font-size:8px;color:var(--text-dim);text-transform:uppercase;">Katalogi</div>
-          </div>
-        </div>
-      </div>
-      <div class="section-info">
-        <h3>Panel boczny ze statystykami</h3>
-        <p>Sidebar został rozbudowany o nowe sekcje informacyjne.</p>
-        <ul class="detail-list">
-          <li><span class="check">&#10003;</span> Wykres kołowy użycia dysku + pasek postępu</li>
-          <li><span class="check">&#10003;</span> <strong>Nowe:</strong> Typy plików z kolorowymi paskami</li>
-          <li><span class="check">&#10003;</span> <strong>Nowe:</strong> Ostatnio modyfikowane pliki</li>
-          <li><span class="check">&#10003;</span> <strong>Nowe:</strong> Kafelki ze statystykami plików/katalogów</li>
-          <li><span class="check">&#10003;</span> Zaokrąglone karty z efektem glass morphism</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== SLIDE 4: WIDOK LISTY ===== -->
-  <div class="slide" data-index="3">
-    <div class="slide-number">03</div>
-    <span class="tag">Lista plików</span>
-    <h2 class="title-lg" style="margin-bottom: 40px;">Odświeżony widok listy</h2>
-
-    <div class="section-highlight">
-      <div class="section-visual" style="flex: 1.3;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div>
-            <div style="font-size:14px;font-weight:700;">Moje pliki</div>
-            <div style="display:flex;align-items:center;gap:4px;margin-top:4px;">
-              <div style="padding:3px 8px;border-radius:6px;background:rgba(99,102,241,0.15);font-size:10px;font-weight:600;color:#818cf8;display:flex;align-items:center;gap:4px;">
-                <span style="font-size:8px;">&#127968;</span> Root
-              </div>
-              <span style="color:rgba(255,255,255,0.15);font-size:10px;">&#10095;</span>
-              <div style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600;color:var(--text-dim);">documents</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:6px;">
-            <div style="padding:5px 10px;border-radius:8px;background:rgba(255,255,255,0.06);font-size:10px;font-weight:600;color:#cbd5e1;display:flex;align-items:center;gap:4px;">+ Nowy folder</div>
-            <div style="padding:5px 10px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#a855f7);font-size:10px;font-weight:600;color:white;display:flex;align-items:center;gap:4px;">&#8593; Prześlij</div>
-          </div>
-        </div>
-        <div style="border:1px solid rgba(255,255,255,0.05);border-radius:12px;overflow:hidden;">
-          <div class="mini-file-row" style="background:rgba(99,102,241,0.06);">
-            <div class="mini-file-icon" style="background:rgba(245,158,11,0.15);">&#128193;</div>
-            <div style="flex:1;font-weight:600;color:#fbbf24;">projects</div>
-            <div style="font-size:10px;color:var(--text-dim);">—</div>
-            <div style="display:flex;gap:2px;">
-              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#9998;</div>
-              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#128465;</div>
-            </div>
-          </div>
-          <div class="mini-file-row">
-            <div class="mini-file-icon" style="background:rgba(99,102,241,0.15);">&#128213;</div>
-            <div style="flex:1;font-weight:600;">report.pdf</div>
-            <div style="font-size:10px;color:var(--text-dim);">2.3 MB</div>
-            <div style="display:flex;gap:2px;">
-              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#8595;</div>
-              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#9998;</div>
-              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#128465;</div>
-            </div>
-          </div>
-          <div class="mini-file-row">
-            <div class="mini-file-icon" style="background:rgba(99,102,241,0.15);">&#128248;</div>
-            <div style="flex:1;font-weight:600;">photo.jpg</div>
-            <div style="font-size:10px;color:var(--text-dim);">3.0 MB</div>
-            <div style="display:flex;gap:2px;">
-              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#8595;</div>
-              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#9998;</div>
-              <div style="width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-dim);">&#128465;</div>
-            </div>
-          </div>
-        </div>
-        <div class="mini-footer" style="margin-top:8px;">
-          <span>3 elementów</span>
-          <span>36.5 MB / 1 GB</span>
-        </div>
-      </div>
-      <div class="section-info">
-        <h3>Widok listy</h3>
-        <p>Tabela plików z ulepszonymi efektami i przyciskami SVG.</p>
-        <ul class="detail-list">
-          <li><span class="check">&#10003;</span> Breadcrumb nawigacja z ikonami SVG</li>
-          <li><span class="check">&#10003;</span> Wiersze z efektem przesunięcia przy hover</li>
-          <li><span class="check">&#10003;</span> Kaskadowe animacje ładowania wierszy</li>
-          <li><span class="check">&#10003;</span> SVG ikony zamiast emoji w akcjach</li>
-          <li><span class="check">&#10003;</span> Podświetlenie wybranego wiersza</li>
-          <li><span class="check">&#10003;</span> Stopka z podsumowaniem</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== SLIDE 5: WIDOK SIATKI ===== -->
+  <!-- ══ 5. FUNKCJE ════════════════════════════════════════════════════════ -->
   <div class="slide" data-index="4">
-    <div class="slide-number">04</div>
-    <span class="tag" style="background:rgba(34,197,94,0.15); color:#4ade80; border-color:rgba(34,197,94,0.2);">Nowe</span>
-    <h2 class="title-lg" style="margin-bottom: 40px;">Widok siatki</h2>
+    <div class="snum">04</div>
+    <span class="tag">Funkcjonalności</span>
+    <h2 class="tlg" style="margin-bottom:32px;">Co potrafi CloudDrive?</h2>
 
-    <div class="section-highlight">
-      <div class="section-visual" style="flex: 1.3;">
-        <div class="mini-grid">
-          <div class="mini-grid-card">
-            <div class="mini-grid-icon" style="background:rgba(245,158,11,0.15);">&#128193;</div>
-            <div class="mini-grid-name" style="color:#fbbf24;">projects</div>
-            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">Katalog</div>
-          </div>
-          <div class="mini-grid-card">
-            <div class="mini-grid-icon" style="background:rgba(245,158,11,0.15);">&#128193;</div>
-            <div class="mini-grid-name" style="color:#fbbf24;">documents</div>
-            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">Katalog</div>
-          </div>
-          <div class="mini-grid-card">
-            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128213;</div>
-            <div class="mini-grid-name">report.pdf</div>
-            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">2.3 MB</div>
-          </div>
-          <div class="mini-grid-card">
-            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128248;</div>
-            <div class="mini-grid-name">photo.jpg</div>
-            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">3.0 MB</div>
-          </div>
-          <div class="mini-grid-card">
-            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128230;</div>
-            <div class="mini-grid-name">backup.zip</div>
-            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">15.0 MB</div>
-          </div>
-          <div class="mini-grid-card">
-            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128221;</div>
-            <div class="mini-grid-name">readme.txt</div>
-            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">1 KB</div>
-          </div>
-          <div class="mini-grid-card">
-            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128202;</div>
-            <div class="mini-grid-name">present.pptx</div>
-            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">5.0 MB</div>
-          </div>
-          <div class="mini-grid-card">
-            <div class="mini-grid-icon" style="background:rgba(99,102,241,0.15);">&#128451;</div>
-            <div class="mini-grid-name">database.sql</div>
-            <div style="font-size:8px;color:var(--text-dim);margin-top:2px;">800 KB</div>
-          </div>
-        </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(99,102,241,.2);">⬆️</div>
+        <h4>Przesyłanie plików</h4>
+        <p>Kliknij przycisk lub po prostu przeciągnij pliki z komputera i upuść je w aplikacji. Możesz wgrać wiele plików jednocześnie — bez ograniczeń.</p>
       </div>
-      <div class="section-info">
-        <h3>Całkowicie nowy widok</h3>
-        <p>Można teraz przełączać między listą a siatką za pomocą przycisków w navbarze.</p>
-        <ul class="detail-list">
-          <li><span class="check">&#10003;</span> Karty z ikoną, nazwą i rozmiarem</li>
-          <li><span class="check">&#10003;</span> Efekt unoszenia przy najechaniu</li>
-          <li><span class="check">&#10003;</span> Przyciski akcji pojawiają się przy hover</li>
-          <li><span class="check">&#10003;</span> Podwójne kliknięcie otwiera folder</li>
-          <li><span class="check">&#10003;</span> Responsywna siatka 2-4 kolumny</li>
-        </ul>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(34,197,94,.15);">⬇️</div>
+        <h4>Pobieranie</h4>
+        <p>Każdy plik pobierasz jednym kliknięciem. Chcesz pobrać cały folder? Aplikacja automatycznie spakuje go do pliku ZIP i wyśle jako całość.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(245,158,11,.15);">📁</div>
+        <h4>Zarządzanie folderami</h4>
+        <p>Twórz nowe foldery, usuwaj niepotrzebne, zmieniaj nazwy jednym kliknięciem. Nawigacja breadcrumb pokazuje, gdzie aktualnie jesteś w strukturze katalogów.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(168,85,247,.18);">🔍</div>
+        <h4>Wyszukiwanie</h4>
+        <p>Wpisz nazwę pliku — wyniki pojawiają się natychmiast. Działa błyskawicznie nawet wtedy, gdy masz setki plików w różnych folderach.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(236,72,153,.15);">⊞</div>
+        <h4>Widok listy i siatki</h4>
+        <p>Przełączaj między widokiem listy a widokiem siatki jednym kliknięciem. Wybierz ten, który bardziej Ci odpowiada — aplikacja zapamiętuje Twój wybór.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(99,102,241,.18);">🔐</div>
+        <h4>Bezpieczne logowanie</h4>
+        <p>Dostęp do aplikacji wymaga logowania. Każde połączenie zabezpieczone jest tokenem JWT — Twoje pliki są widoczne wyłącznie dla Ciebie.</p>
       </div>
     </div>
   </div>
 
-  <!-- ===== SLIDE 6: MODALE I TOAST ===== -->
+  <!-- ══ 6. GŁÓWNY EKRAN UI ════════════════════════════════════════════════ -->
   <div class="slide" data-index="5">
-    <div class="slide-number">05</div>
-    <span class="tag">Interakcje</span>
-    <h2 class="title-lg" style="margin-bottom: 40px;">Modale i powiadomienia</h2>
+    <div class="snum">05</div>
+    <span class="tag green">Wygląd aplikacji</span>
+    <h2 class="tlg" style="margin-bottom:22px;">Tak wygląda CloudDrive od środka</h2>
 
-    <div class="section-highlight">
-      <div class="section-visual" style="gap: 16px; align-items: center;">
-        <div class="mini-toast" style="margin-bottom: 8px;">
-          <div class="toast-check">&#10003;</div>
-          Przesłano 2 plik(ów)
-        </div>
-        <div style="display:flex; gap: 12px; width: 100%; justify-content: center;">
-          <div class="mini-modal" style="flex:1;">
-            <div class="mini-modal-icon" style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(249,115,22,0.2));">&#128193;</div>
-            <h4>Nowy katalog</h4>
-            <div style="padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:10px;color:var(--text-dim);text-align:left;margin-bottom:12px;">Nazwa katalogu</div>
-            <div class="mini-modal-btns">
-              <div class="mini-modal-btn cancel">Anuluj</div>
-              <div class="mini-modal-btn primary">Utwórz</div>
-            </div>
+    <!-- Browser frame mockup -->
+    <div style="width:100%;max-width:980px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0b1120;box-shadow:0 28px 80px rgba(0,0,0,.6);">
+      <!-- Window chrome -->
+      <div style="display:flex;align-items:center;gap:6px;padding:9px 16px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="width:10px;height:10px;border-radius:50%;background:#ef4444;"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b;"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#22c55e;"></div>
+        <div style="flex:1;text-align:center;font-size:9px;color:var(--muted);background:rgba(255,255,255,.04);border-radius:5px;padding:3px 12px;margin:0 40px;">localhost:5173 — CloudDrive</div>
+      </div>
+      <!-- Navbar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 18px;background:rgba(10,15,40,.85);border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#a855f7,#ec4899);display:flex;align-items:center;justify-content:center;font-size:12px;">☁</div>
+          <div>
+            <div style="font-size:11px;font-weight:800;line-height:1.1;">Cloud<span style="background:linear-gradient(135deg,#6366f1,#ec4899);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Drive</span></div>
+            <div style="font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">File Manager</div>
           </div>
-          <div class="mini-modal" style="flex:1;">
-            <div class="mini-modal-icon" style="background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(220,38,38,0.2));">&#128465;</div>
-            <h4>Usuń plik?</h4>
-            <p>Czy na pewno chcesz usunąć "photo.jpg"?</p>
-            <div class="mini-modal-btns">
-              <div class="mini-modal-btn cancel">Anuluj</div>
-              <div class="mini-modal-btn danger">Usuń</div>
-            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:4px 11px;">
+          <span style="font-size:9px;color:var(--muted);">🔍 Szukaj plików...</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <div style="display:flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:7px;padding:2px;">
+            <div style="width:18px;height:18px;border-radius:4px;background:rgba(99,102,241,.3);display:flex;align-items:center;justify-content:center;font-size:8px;color:#818cf8;">≡</div>
+            <div style="width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--muted);">⊞</div>
+          </div>
+          <div style="width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fbbf24;">☀</div>
+          <div style="width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:white;position:relative;">
+            MK<div style="position:absolute;bottom:-1px;right:-1px;width:6px;height:6px;border-radius:50%;background:#22c55e;border:1px solid #0b1120;"></div>
           </div>
         </div>
       </div>
-      <div class="section-info">
-        <h3>Ulepszone okna dialogowe</h3>
-        <p>Modale i powiadomienia dostały nowy, bardziej dopracowany wygląd.</p>
-        <ul class="detail-list">
-          <li><span class="check">&#10003;</span> Modale z animacją skalowania</li>
-          <li><span class="check">&#10003;</span> Gradientowe ikony w nagłówkach</li>
-          <li><span class="check">&#10003;</span> Rozmyte tło za modalem</li>
-          <li><span class="check">&#10003;</span> Toast wjeżdża z prawej strony</li>
-          <li><span class="check">&#10003;</span> Efekt wciśnięcia na przyciskach</li>
-          <li><span class="check">&#10003;</span> Upload z drag & drop i animacją</li>
-        </ul>
+      <!-- Body -->
+      <div style="display:flex;">
+        <!-- Sidebar -->
+        <div style="width:175px;padding:12px;border-right:1px solid rgba(255,255,255,.05);flex-shrink:0;display:flex;flex-direction:column;gap:9px;">
+          <div style="border-radius:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);padding:10px;text-align:center;">
+            <div style="font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px;">Przestrzeń dyskowa</div>
+            <div style="font-size:20px;font-weight:900;">3%</div>
+            <div style="height:3px;border-radius:2px;background:rgba(255,255,255,.06);margin-top:5px;"><div style="width:3%;height:100%;border-radius:2px;background:linear-gradient(90deg,#6366f1,#a855f7);"></div></div>
+          </div>
+          <div style="border-radius:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);padding:10px;">
+            <div style="font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:7px;">Typy plików</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;"><span style="font-size:8px;font-weight:700;color:#f59e0b;min-width:22px;">.jpg</span><div style="flex:1;height:2px;border-radius:2px;background:rgba(255,255,255,.06);"><div style="width:58%;height:100%;background:#f59e0b;border-radius:2px;"></div></div></div>
+            <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;"><span style="font-size:8px;font-weight:700;color:#ef4444;min-width:22px;">.pdf</span><div style="flex:1;height:2px;border-radius:2px;background:rgba(255,255,255,.06);"><div style="width:40%;height:100%;background:#ef4444;border-radius:2px;"></div></div></div>
+            <div style="display:flex;align-items:center;gap:5px;"><span style="font-size:8px;font-weight:700;color:#6366f1;min-width:22px;">.zip</span><div style="flex:1;height:2px;border-radius:2px;background:rgba(255,255,255,.06);"><div style="width:28%;height:100%;background:#6366f1;border-radius:2px;"></div></div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+            <div style="text-align:center;padding:7px 4px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);"><div style="font-size:15px;font-weight:900;">15</div><div style="font-size:7px;color:var(--muted);text-transform:uppercase;">Pliki</div></div>
+            <div style="text-align:center;padding:7px 4px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);"><div style="font-size:15px;font-weight:900;">4</div><div style="font-size:7px;color:var(--muted);text-transform:uppercase;">Foldery</div></div>
+          </div>
+        </div>
+        <!-- Main panel -->
+        <div style="flex:1;padding:12px;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:9px;">
+            <div>
+              <div style="font-size:11px;font-weight:800;margin-bottom:3px;">Moje pliki</div>
+              <div style="display:flex;align-items:center;gap:3px;">
+                <div style="font-size:8px;font-weight:600;background:rgba(99,102,241,.15);color:#818cf8;padding:2px 7px;border-radius:4px;">🏠 Root</div>
+                <span style="font-size:8px;color:var(--muted);">›</span>
+                <div style="font-size:8px;color:var(--muted);">documents</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:4px;">
+              <div style="font-size:8px;font-weight:600;background:rgba(255,255,255,.07);color:#cbd5e1;padding:4px 8px;border-radius:6px;">+ Nowy folder</div>
+              <div style="font-size:8px;font-weight:600;background:linear-gradient(135deg,#6366f1,#a855f7);color:white;padding:4px 8px;border-radius:6px;">↑ Prześlij</div>
+            </div>
+          </div>
+          <div style="border:1px solid rgba(255,255,255,.05);border-radius:10px;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:9px;padding:7px 11px;background:rgba(245,158,11,.05);">
+              <div style="width:20px;height:20px;border-radius:6px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;font-size:10px;">📁</div>
+              <span style="flex:1;font-size:10px;font-weight:600;color:#fbbf24;">projects</span>
+              <span style="font-size:8px;color:var(--muted);">—</span>
+              <span style="font-size:9px;color:var(--muted);">✏ 🗑</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;padding:7px 11px;border-top:1px solid rgba(255,255,255,.04);">
+              <div style="width:20px;height:20px;border-radius:6px;background:rgba(99,102,241,.15);display:flex;align-items:center;justify-content:center;font-size:10px;">📕</div>
+              <span style="flex:1;font-size:10px;font-weight:500;">report.pdf</span>
+              <span style="font-size:8px;color:var(--muted);">2.3 MB</span>
+              <span style="font-size:9px;color:var(--muted);">↓ ✏ 🗑</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;padding:7px 11px;border-top:1px solid rgba(255,255,255,.04);">
+              <div style="width:20px;height:20px;border-radius:6px;background:rgba(99,102,241,.15);display:flex;align-items:center;justify-content:center;font-size:10px;">🖼️</div>
+              <span style="flex:1;font-size:10px;font-weight:500;">photo.jpg</span>
+              <span style="font-size:8px;color:var(--muted);">3.0 MB</span>
+              <span style="font-size:9px;color:var(--muted);">↓ ✏ 🗑</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;padding:7px 11px;border-top:1px solid rgba(255,255,255,.04);">
+              <div style="width:20px;height:20px;border-radius:6px;background:rgba(99,102,241,.15);display:flex;align-items:center;justify-content:center;font-size:10px;">📦</div>
+              <span style="flex:1;font-size:10px;font-weight:500;">backup.zip</span>
+              <span style="font-size:8px;color:var(--muted);">15.0 MB</span>
+              <span style="font-size:9px;color:var(--muted);">↓ ✏ 🗑</span>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);padding-top:5px;"><span>4 elementy</span><span>20.3 MB / 1 GB</span></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ===== SLIDE 7: TLO I DETALE ===== -->
+  <!-- ══ 7. INTERAKCJE — upload, siatka, modale ════════════════════════════ -->
   <div class="slide" data-index="6">
-    <div class="slide-number">06</div>
-    <span class="tag" style="background:rgba(168,85,247,0.15); color:#c084fc; border-color:rgba(168,85,247,0.2);">Efekty</span>
-    <h2 class="title-lg" style="margin-bottom: 40px;">Tło, animacje i detale</h2>
+    <div class="snum">06</div>
+    <span class="tag pink">Interakcje</span>
+    <h2 class="tlg" style="margin-bottom:24px;">Widok siatki, upload i powiadomienia</h2>
 
-    <div class="section-highlight">
-      <div class="section-visual" style="position:relative; background: linear-gradient(135deg, #0f0a2a, #1a0e3e, #0f172a);">
-        <!-- Floating orbs -->
-        <div style="position:absolute;top:20px;right:30px;width:80px;height:80px;border-radius:50%;background:rgba(99,102,241,0.15);filter:blur(20px);animation:f1 4s ease-in-out infinite;"></div>
-        <div style="position:absolute;bottom:30px;left:20px;width:60px;height:60px;border-radius:50%;background:rgba(168,85,247,0.12);filter:blur(15px);animation:f2 5s ease-in-out infinite;"></div>
-        <div style="position:absolute;top:50%;right:40%;width:50px;height:50px;border-radius:50%;background:rgba(236,72,153,0.08);filter:blur(12px);"></div>
+    <div style="display:flex;gap:20px;width:100%;max-width:1020px;align-items:stretch;">
 
-        <div style="position:relative;z-index:1;text-align:center;">
-          <p style="font-size:12px;font-weight:600;color:#818cf8;margin-bottom:8px;">Pływające gradientowe kule</p>
-          <p style="font-size:10px;color:var(--text-dim);line-height:1.6;">
-            Trzy animowane elementy w tle tworzące<br>subtelny efekt głębokości
+      <!-- Widok siatki -->
+      <div style="flex:1;border-radius:20px;border:1px solid rgba(255,255,255,.08);background:#0f172a;padding:18px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px;">Widok siatki — alternatywa dla listy</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+          <div style="padding:12px 8px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center;transition:transform .2s;">
+            <div style="font-size:24px;margin-bottom:5px;">📁</div>
+            <div style="font-size:9px;font-weight:700;color:#fbbf24;">projects</div>
+            <div style="font-size:7px;color:var(--muted);">Katalog</div>
+          </div>
+          <div style="padding:12px 8px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center;">
+            <div style="font-size:24px;margin-bottom:5px;">📕</div>
+            <div style="font-size:9px;font-weight:700;">report.pdf</div>
+            <div style="font-size:7px;color:var(--muted);">2.3 MB</div>
+          </div>
+          <div style="padding:12px 8px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center;">
+            <div style="font-size:24px;margin-bottom:5px;">🖼️</div>
+            <div style="font-size:9px;font-weight:700;">photo.jpg</div>
+            <div style="font-size:7px;color:var(--muted);">3.0 MB</div>
+          </div>
+          <div style="padding:12px 8px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center;">
+            <div style="font-size:24px;margin-bottom:5px;">📦</div>
+            <div style="font-size:9px;font-weight:700;">backup.zip</div>
+            <div style="font-size:7px;color:var(--muted);">15 MB</div>
+          </div>
+          <div style="padding:12px 8px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center;">
+            <div style="font-size:24px;margin-bottom:5px;">📊</div>
+            <div style="font-size:9px;font-weight:700;">data.xlsx</div>
+            <div style="font-size:7px;color:var(--muted);">500 KB</div>
+          </div>
+          <div style="padding:12px 8px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center;">
+            <div style="font-size:24px;margin-bottom:5px;">📝</div>
+            <div style="font-size:9px;font-weight:700;">notes.txt</div>
+            <div style="font-size:7px;color:var(--muted);">8 KB</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:9px;color:var(--muted);text-align:center;">Przełącznik ≡ / ⊞ w navbarze</div>
+      </div>
+
+      <!-- Prawa kolumna -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+
+        <!-- Upload drag & drop -->
+        <div style="border-radius:18px;border:1px solid rgba(255,255,255,.08);background:#0f172a;padding:16px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;">Upload — drag &amp; drop</div>
+          <div style="border:1.5px dashed rgba(99,102,241,.45);border-radius:12px;padding:16px;text-align:center;background:rgba(99,102,241,.05);">
+            <div style="font-size:26px;margin-bottom:6px;">📂</div>
+            <div style="font-size:11px;font-weight:700;color:white;margin-bottom:3px;">Przeciągnij i upuść pliki</div>
+            <div style="font-size:9px;color:var(--muted);margin-bottom:9px;">lub kliknij i wybierz z dysku</div>
+            <div style="display:inline-block;padding:5px 14px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#a855f7);font-size:10px;font-weight:700;color:white;box-shadow:0 4px 14px rgba(99,102,241,.3);">Wybierz pliki</div>
+          </div>
+        </div>
+
+        <!-- Modale i toast obok siebie -->
+        <div style="display:flex;gap:10px;flex:1;">
+          <!-- Toast sukces -->
+          <div style="flex:1;border-radius:14px;border:1px solid rgba(255,255,255,.06);background:#0f172a;padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);">Powiadomienia</div>
+            <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:9px;background:linear-gradient(135deg,#10b981,#059669);font-size:9px;font-weight:700;color:white;">
+              <div style="width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:7px;">✓</div>
+              Przesłano 2 plik(ów)
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:9px;background:linear-gradient(135deg,#ef4444,#dc2626);font-size:9px;font-weight:700;color:white;">
+              <div style="width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:7px;">✕</div>
+              Błąd — brak połączenia
+            </div>
+          </div>
+          <!-- Delete confirm modal -->
+          <div style="flex:1;border-radius:14px;border:1px solid rgba(239,68,68,.18);background:rgba(239,68,68,.03);padding:12px;text-align:center;">
+            <div style="font-size:22px;margin-bottom:5px;">🗑️</div>
+            <div style="font-size:10px;font-weight:800;margin-bottom:3px;">Potwierdź usunięcie</div>
+            <div style="font-size:9px;color:var(--muted);margin-bottom:9px;">"photo.jpg"</div>
+            <div style="display:flex;gap:5px;">
+              <div style="flex:1;padding:5px;border-radius:7px;background:rgba(255,255,255,.07);font-size:8px;font-weight:700;color:#cbd5e1;">Anuluj</div>
+              <div style="flex:1;padding:5px;border-radius:7px;background:linear-gradient(135deg,#ef4444,#dc2626);font-size:8px;font-weight:700;color:white;">Usuń</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 8. JAK DZIAŁA ══════════════════════════════════════════════════════ -->
+  <div class="slide" data-index="7">
+    <div class="snum">07</div>
+    <span class="tag amber">Jak to działa?</span>
+    <h2 class="tlg" style="margin-bottom:36px;">Cztery proste kroki</h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Zaloguj się</h4>
+        <p>Wpisujesz e-mail i hasło. Konto jest zabezpieczone tokenem JWT — tylko Ty widzisz swoje pliki. Żadnych zewnętrznych kont, żadnych powiązanych usług.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>Przeglądaj</h4>
+        <p>Widzisz wszystkie swoje pliki i foldery od razu. Sortuj po nazwie lub rozmiarze, przeszukuj wpisując nazwę, przełącz widok listy lub siatki — tak jak Ci wygodnie.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>Zarządzaj</h4>
+        <p>Wgrywaj pliki kliknięciem lub drag & drop, pobieraj, zmieniaj nazwy, usuwaj i twórz foldery — wszystkie operacje wykonujesz w kilka sekund bez żadnej instalacji.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h4>Dostęp wszędzie</h4>
+        <p>Pliki są bezpiecznie przechowywane w chmurze. Otwórz CloudDrive z komputera, laptopa lub telefonu — z domu, z pracy, z kawiarni, z dowolnego miejsca na świecie.</p>
+      </div>
+    </div>
+
+    <p class="sub" style="margin-top:28px; font-size:14px;">
+      Żadnej instalacji, żadnych skomplikowanych ustawień — po prostu działa.
+    </p>
+  </div>
+
+  <!-- ══ 9. STOS TECHNOLOGICZNY (jedyny techniczny) ═══════════════════════ -->
+  <div class="slide" data-index="8">
+    <div class="snum">08</div>
+    <span class="tag" style="background:rgba(99,102,241,.18);color:#a5b4fc;border-color:rgba(99,102,241,.3);">Stack technologiczny</span>
+    <h2 class="tlg" style="margin-bottom:32px;">Pod maską CloudDrive</h2>
+
+    <div class="tech-cols">
+      <!-- Frontend -->
+      <div class="tech-box">
+        <h3>🖥️ Frontend</h3>
+
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;">React</div>
+          <span>Interfejs użytkownika</span>
+          <small>v18</small>
+        </div>
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(99,102,241,.15);color:#818cf8;">Vite</div>
+          <span>Bundler / dev server</span>
+        </div>
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(20,184,166,.15);color:#2dd4bf;">Tailwind</div>
+          <span>Style CSS</span>
+          <small>v4</small>
+        </div>
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(168,85,247,.15);color:#c084fc;">Recharts</div>
+          <span>Wykres kołowy dysku</span>
+        </div>
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(234,179,8,.15);color:#facc15;">Axios</div>
+          <span>Komunikacja z API</span>
+        </div>
+      </div>
+
+      <!-- Backend -->
+      <div class="tech-box">
+        <h3>⚙️ Backend</h3>
+
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(6,182,212,.15);color:#22d3ee;">Go</div>
+          <span>REST API</span>
+          <small>net/http</small>
+        </div>
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(59,130,246,.15);color:#60a5fa;">Postgres</div>
+          <span>Baza danych</span>
+        </div>
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(245,158,11,.15);color:#fbbf24;">S3</div>
+          <span>Object storage (pliki)</span>
+        </div>
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(34,197,94,.15);color:#4ade80;">nginx</div>
+          <span>Reverse proxy</span>
+        </div>
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(99,102,241,.15);color:#818cf8;">Docker</div>
+          <span>Konteneryzacja usług</span>
+        </div>
+      </div>
+
+      <!-- Bezpieczeństwo -->
+      <div class="tech-box" style="flex:.8;">
+        <h3>🔐 Bezpieczeństwo</h3>
+
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(236,72,153,.15);color:#f472b6;">JWT</div>
+          <span>Autoryzacja tokenem</span>
+        </div>
+        <div class="tech-row">
+          <div class="tech-badge" style="background:rgba(99,102,241,.15);color:#818cf8;">HTTPS</div>
+          <span>Szyfrowanie połączenia</span>
+        </div>
+        <div style="margin-top:20px; padding:14px; border-radius:14px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07);">
+          <p style="font-size:12px; color:var(--muted); line-height:1.7;">
+            Frontend komunikuje się z backendem wyłącznie przez REST API — czyste rozdzielenie warstw.
           </p>
         </div>
       </div>
-      <div class="section-info">
-        <h3>Wizualne detale</h3>
-        <p>Każdy element interfejsu dostał dopracowane efekty wizualne.</p>
-        <ul class="detail-list">
-          <li><span class="check">&#10003;</span> Animowane gradientowe kule w tle</li>
-          <li><span class="check">&#10003;</span> Efekt glass morphism na kartach</li>
-          <li><span class="check">&#10003;</span> Płynne przejścia kolorów (dark/light)</li>
-          <li><span class="check">&#10003;</span> Kaskadowe ładowanie wierszy tabeli</li>
-          <li><span class="check">&#10003;</span> Minimalistyczny scrollbar</li>
-          <li><span class="check">&#10003;</span> Stopka z logo i prawami autorskimi</li>
-        </ul>
+    </div>
+  </div>
+
+  <!-- ══ 9.6. FRAGMENT KODU ════════════════════════════════════════════════ -->
+  <div class="slide" data-index="code">
+    <div class="snum">10</div>
+    <span class="tag amber">Fragment kodu</span>
+    <h2 class="tlg" style="margin-bottom:14px;">Upload z weryfikacją integralności</h2>
+    <p class="sub" style="margin-bottom:22px;font-size:14px;">Przed wysłaniem pliku liczymy jego sumę SHA-256 — serwer sprawdza, czy nic nie zostało uszkodzone po drodze.</p>
+
+    <div style="width:100%;max-width:860px;border-radius:20px;border:1px solid rgba(255,255,255,.1);background:#0d1117;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55);">
+      <div style="display:flex;align-items:center;gap:6px;padding:10px 16px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.07);">
+        <div style="width:10px;height:10px;border-radius:50%;background:#ef4444;opacity:.8;"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b;opacity:.8;"></div>
+        <div style="width:10px;height:10px;border-radius:50%;background:#22c55e;opacity:.8;"></div>
+        <span style="margin-left:12px;font-size:11px;color:#64748b;font-family:monospace;">src/api.js</span>
+        <span style="margin-left:auto;font-size:10px;color:#374151;font-weight:600;letter-spacing:.06em;">JAVASCRIPT</span>
+      </div>
+      <pre style="margin:0;padding:22px 28px;font-size:12.5px;line-height:1.75;font-family:'Cascadia Code','Fira Code','Consolas',monospace;overflow-x:auto;"><code><span style="color:#6272a4;">// Oblicz SHA-256 przed wysłaniem — weryfikacja integralności</span>
+<span style="color:#ff79c6;">async function</span> <span style="color:#50fa7b;">sha256</span>(<span style="color:#ffb86c;">file</span>) {
+  <span style="color:#ff79c6;">const</span> buffer     = <span style="color:#ff79c6;">await</span> file.<span style="color:#50fa7b;">arrayBuffer</span>();
+  <span style="color:#ff79c6;">const</span> hashBuffer = <span style="color:#ff79c6;">await</span> crypto.subtle.<span style="color:#50fa7b;">digest</span>(<span style="color:#f1fa8c;">'SHA-256'</span>, buffer);
+  <span style="color:#ff79c6;">return</span> Array.<span style="color:#50fa7b;">from</span>(<span style="color:#ff79c6;">new</span> <span style="color:#8be9fd;">Uint8Array</span>(hashBuffer))
+    .<span style="color:#50fa7b;">map</span>(<span style="color:#ffb86c;">b</span> =&gt; b.<span style="color:#50fa7b;">toString</span>(<span style="color:#bd93f9;">16</span>).<span style="color:#50fa7b;">padStart</span>(<span style="color:#bd93f9;">2</span>, <span style="color:#f1fa8c;">'0'</span>))
+    .<span style="color:#50fa7b;">join</span>(<span style="color:#f1fa8c;">''</span>);
+}
+
+<span style="color:#ff79c6;">export async function</span> <span style="color:#50fa7b;">uploadFile</span>(<span style="color:#ffb86c;">file, directoryId, token</span>) {
+  <span style="color:#ff79c6;">const</span> checksum = <span style="color:#ff79c6;">await</span> <span style="color:#50fa7b;">sha256</span>(file);
+  <span style="color:#ff79c6;">const</span> formData = <span style="color:#ff79c6;">new</span> <span style="color:#8be9fd;">FormData</span>();
+  formData.<span style="color:#50fa7b;">append</span>(<span style="color:#f1fa8c;">'file'</span>,            file);
+  formData.<span style="color:#50fa7b;">append</span>(<span style="color:#f1fa8c;">'checksum'</span>,        checksum);
+  formData.<span style="color:#50fa7b;">append</span>(<span style="color:#f1fa8c;">'idempotencyKey'</span>,  crypto.<span style="color:#50fa7b;">randomUUID</span>());
+  <span style="color:#ff79c6;">if</span> (directoryId) formData.<span style="color:#50fa7b;">append</span>(<span style="color:#f1fa8c;">'directoryId'</span>, directoryId);
+
+  <span style="color:#ff79c6;">const</span> res = <span style="color:#ff79c6;">await</span> http.<span style="color:#50fa7b;">post</span>(<span style="color:#f1fa8c;">'/v1/files'</span>, formData, {
+    headers: <span style="color:#50fa7b;">auth</span>(token)
+  });
+  <span style="color:#ff79c6;">return</span> res.data;
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- ══ 10. ZESPÓŁ ══════════════════════════════════════════════════════════ -->
+  <div class="slide" data-index="9">
+    <div class="snum">11</div>
+    <span class="tag green">Zespół</span>
+    <h2 class="tlg" style="margin-bottom:36px;">Kto to zrobił?</h2>
+
+    <div class="team-grid">
+      <div class="team-card">
+        <div style="display:flex;justify-content:center;gap:8px;margin-bottom:16px;">
+          <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:white;">M</div>
+          <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:white;">Z</div>
+          <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#6366f1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:white;">D</div>
+        </div>
+        <h4>Mikołaj, Zosia, Dawid</h4>
+        <div class="role" style="color:#818cf8;">Frontend</div>
+        <p>Projekt i implementacja całego interfejsu użytkownika — React 18, Tailwind CSS, animacje, widok listy i siatki, dark mode, komunikacja z API przez Axios.</p>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#10b981,#06b6d4);">☁️</div>
+        <h4>CloudDrive</h4>
+        <div class="role" style="color:#34d399;">Projekt</div>
+        <p>Pełna aplikacja do zarządzania plikami w chmurze — od projektu UX i interfejsu aż po wdrożenie całego systemu na Docker Compose.</p>
+      </div>
+
+      <div class="team-card" style="border-color:rgba(249,115,22,.25); background:rgba(249,115,22,.04);">
+        <div class="team-avatar" style="background:linear-gradient(135deg,#f97316,#ef4444);">K</div>
+        <h4>Grupa Kamila</h4>
+        <div class="role" style="color:#fb923c;">Backend</div>
+        <p>Cały backend aplikacji — REST API napisane w Go, baza danych PostgreSQL, obiektowy storage S3, reverse proxy nginx i konteneryzacja Docker Compose.</p>
       </div>
     </div>
   </div>
 
-  <!-- ===== SLIDE 8: PODSUMOWANIE ===== -->
-  <div class="slide" data-index="7">
+  <!-- ══ 11. DZIĘKUJEMY ══════════════════════════════════════════════════════ -->
+  <div class="slide" data-index="10">
     <div class="logo-hero">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
       </svg>
     </div>
-    <h2 class="title-xl" style="margin-bottom: 16px;">
-      <span class="gradient-text">Gotowe!</span>
-    </h2>
-    <p class="subtitle" style="margin-bottom: 50px;">
-      Aplikacja CloudDrive jest teraz w pełni dopracowana wizualnie
+    <h2 class="txl" style="margin-bottom:14px;"><span class="grad">Dziękujemy za uwagę!</span></h2>
+    <p class="sub" style="margin-bottom:18px;">
+      CloudDrive — zarządzanie plikami w chmurze, które po prostu działa.
     </p>
 
-    <a href="http://localhost:5174" target="_blank" class="final-cta">
-      Zobacz efekt w przeglądarce
-      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-      </svg>
-    </a>
+    <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap; justify-content:center;">
+      <div style="padding:10px 20px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid var(--border); font-size:13px; color:#cbd5e1;">
+        ⚛️ React + Vite
+      </div>
+      <div style="padding:10px 20px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid var(--border); font-size:13px; color:#cbd5e1;">
+        ⚙️ Go REST API
+      </div>
+      <div style="padding:10px 20px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid var(--border); font-size:13px; color:#cbd5e1;">
+        🗄️ PostgreSQL + S3
+      </div>
+      <div style="padding:10px 20px; border-radius:14px; background:rgba(249,115,22,.1); border:1px solid rgba(249,115,22,.2); font-size:13px; color:#fb923c;">
+        ⚙️ Backend — Grupa Kamila
+      </div>
+    </div>
 
-    <p style="margin-top: 40px; font-size: 13px; color: var(--text-dim);">
-      Dziękuję za uwagę &#128640;
+    <p style="margin-top:28px; font-size:15px; color:#cbd5e1; font-weight:500;">
+      Za chwilę przejdziemy do demonstracji na żywo — zapraszamy do zobaczenia aplikacji w działaniu.
+    </p>
+    <p style="margin-top:14px; font-size:13px; color:var(--muted);">
+      Pytania? Chętnie odpowiemy!
     </p>
   </div>
 
-</div>
-
-<!-- Nav -->
-<div class="nav-bar">
-  <button class="nav-btn" id="prevBtn" onclick="prevSlide()">&#8592;</button>
-  <div class="nav-dots" id="navDots"></div>
-  <button class="nav-btn" id="nextBtn" onclick="nextSlide()">&#8594;</button>
-  <div class="slide-counter" id="slideCounter">1 / 8</div>
-</div>
+</div><!-- /wrap -->
 
 <script>
+  function scaleSlides() {
+    const wrap = document.getElementById('wrap');
+    const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    wrap.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }
+  scaleSlides();
+  window.addEventListener('resize', scaleSlides);
+
   const slides = document.querySelectorAll('.slide');
-  const totalSlides = slides.length;
-  let currentSlide = 0;
+  const total  = slides.length;
+  let cur = 0;
 
-  const dotsContainer = document.getElementById('navDots');
-  for (let i = 0; i < totalSlides; i++) {
-    const dot = document.createElement('button');
-    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
-    dot.onclick = () => goToSlide(i);
-    dotsContainer.appendChild(dot);
-  }
-
-  function updateSlides() {
-    slides.forEach((slide, i) => {
-      slide.classList.remove('active', 'prev');
-      if (i === currentSlide) slide.classList.add('active');
-      else if (i < currentSlide) slide.classList.add('prev');
+  function update() {
+    slides.forEach((s, i) => {
+      s.classList.remove('active','prev');
+      if (i === cur) s.classList.add('active');
+      else if (i < cur) s.classList.add('prev');
     });
-    dotsContainer.querySelectorAll('.nav-dot').forEach((dot, i) => dot.classList.toggle('active', i === currentSlide));
-    document.getElementById('slideCounter').textContent = `${currentSlide + 1} / ${totalSlides}`;
-    document.getElementById('prevBtn').disabled = currentSlide === 0;
-    document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
   }
 
-  function nextSlide() { if (currentSlide < totalSlides - 1) { currentSlide++; updateSlides(); } }
-  function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlides(); } }
-  function goToSlide(i) { currentSlide = i; updateSlides(); }
+  function next() { if (cur < total-1) { cur++; update(); } }
+  function prev() { if (cur > 0)       { cur--; update(); } }
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft')                   { e.preventDefault(); prev(); }
   });
 
-  let touchStartX = 0;
-  document.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
-  document.addEventListener('touchend', (e) => {
-    const diff = touchStartX - e.changedTouches[0].screenX;
-    if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+  let tx = 0;
+  document.addEventListener('touchstart', e => { tx = e.changedTouches[0].screenX; });
+  document.addEventListener('touchend',   e => {
+    const d = tx - e.changedTouches[0].screenX;
+    if (Math.abs(d) > 50) d > 0 ? next() : prev();
   });
 </script>
-
 </body>
 </html>
